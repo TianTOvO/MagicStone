@@ -2,6 +2,8 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "framework": "vite",
+  "installCommand": "npm install",
+  "packageManager": "npm@latest",
   "env": {
     "MONAD_RPC_URL": "@monad_rpc_url"
   }
