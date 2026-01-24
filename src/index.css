@@ -1,0 +1,162 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+  line-height: 1.5;
+  font-weight: 400;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  
+  /* 主题颜色变量 - 丰富多彩的配色 */
+  --color-primary: #3b82f6;
+  --color-secondary: #8b5cf6;
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-danger: #ef4444;
+  --color-info: #6366f1;
+  --color-pink: #ec4899;
+  --color-cyan: #06b6d4;
+  --color-rose: #f43f5e;
+  --color-teal: #14b8a6;
+  
+  /* 白色模式背景 */
+  --color-bg-primary: #ffffff;
+  --color-bg-secondary: #f8fafc;
+  --color-bg-tertiary: #e2e8f0;
+  
+  /* 文本颜色 */
+  --color-text-primary: #1e293b;
+  --color-text-secondary: #475569;
+  --color-text-tertiary: #64748b;
+}
+
+/* 全局样式 */
+body {
+  background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%);
+  color: var(--color-text-primary);
+  min-height: 100vh;
+}
+
+/* 滚动条样式 */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: linear-gradient(to bottom, #f0f9ff, #f3e8ff);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(to bottom, #3b82f6, #8b5cf6);
+  border-radius: 10px;
+  box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.1);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(to bottom, #2563eb, #7c3aed);
+}
+
+/* 输入框焦点样式 */
+input:focus, textarea:focus, select:focus {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+}
+
+/* 渐变文字 */
+.gradient-text {
+  @apply bg-clip-text text-transparent;
+}
+
+/* 卡片悬浮效果 */
+.card-hover {
+  @apply transition-all duration-300 hover:shadow-2xl hover:-translate-y-2;
+}
+
+/* 按钮基础样式 */
+.btn {
+  @apply px-4 py-2 rounded-xl font-bold transition-all;
+}
+
+.btn-primary {
+  @apply bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-white hover:from-blue-700 hover:via-purple-700 hover:to-pink-700 shadow-lg hover:shadow-purple-300/50;
+}
+
+.btn-secondary {
+  @apply bg-gradient-to-r from-gray-200 to-gray-100 text-gray-800 hover:from-gray-300 hover:to-gray-200 shadow-md;
+}
+
+.btn-success {
+  @apply bg-gradient-to-r from-green-500 to-emerald-500 text-white hover:from-green-600 hover:to-emerald-600 shadow-lg hover:shadow-green-300/50;
+}
+
+.btn-warning {
+  @apply bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:from-amber-600 hover:to-orange-600 shadow-lg hover:shadow-amber-300/50;
+}
+
+.btn-danger {
+  @apply bg-gradient-to-r from-red-500 to-rose-500 text-white hover:from-red-600 hover:to-rose-600 shadow-lg hover:shadow-red-300/50;
+}
+
+/* 加载动画 */
+.loading-spinner {
+  @apply animate-spin rounded-full h-8 w-8 border-4 border-blue-200 border-t-blue-600;
+}
+
+/* 工具提示 */
+.tooltip {
+  @apply invisible absolute -translate-y-full mb-2 px-3 py-2 text-sm bg-gradient-to-r from-gray-800 to-gray-900 text-white rounded-lg shadow-lg opacity-0 transition-all duration-200 z-50;
+}
+
+/* 自定义动画 */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes glow {
+  0%, 100% {
+    box-shadow: 0 0 5px rgba(59, 130, 246, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.6);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+.float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.glow {
+  animation: glow 2s ease-in-out infinite;
+}
+
+.shimmer {
+  background: linear-gradient(90deg, #f0f9ff, #ffffff, #f0f9ff);
+  background-size: 1000px 100%;
+  animation: shimmer 2s infinite;
+}
+
+.tooltip-trigger:hover .tooltip {
+  @apply visible opacity-100;
+}
