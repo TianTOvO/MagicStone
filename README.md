@@ -139,22 +139,6 @@ MagicStoneModule#Quest - 0x4549C7a1D9A941570b3D7be5fE95Ec509eA2230a
 
 ---
 
-## 🎨 设计系统
-
-### 主题颜色
-- **原色**: 琥珀色 (#FBBF24)、橙色 (#FB923C)、红色 (#EF4444)
-- **辅助色**: 粉色 (#EC4899)、玫瑰色 (#F43F5E)
-- **背景**: 纯白色 (#FFFFFF)
-- **文字**: 深灰色 (#1F2937)
-
-### 视觉效果
-- ✨ 渐变色背景和边框
-- 🎬 流畅的 Framer Motion 动画
-- 🌟 Glassmorphism 玻璃态效果
-- 📱 完全响应式设计
-- ♿ 无障碍访问支持
-
----
 
 ## 📁 项目结构
 
@@ -268,26 +252,6 @@ npx hardhat test
 
 ---
 
-## 🌐 网络配置
-
-### MetaMask 添加 Monad 测试网
-
-1. 打开 MetaMask
-2. 点击网络下拉菜单 → "添加网络"
-3. 填写以下信息：
-   - **网络名称**: Monad Testnet
-   - **RPC URL**: https://testnet-rpc.monad.xyz/
-   - **Chain ID**: 10143
-   - **货币符号**: MON
-   - **区块浏览器**: https://testnet-explorer.monad.xyz/
-
-### 获取测试币
-
-1. 访问 [Monad 水龙头](https://testnet-faucet.monad.xyz/)
-2. 连接你的钱包
-3. 点击"Claim"获取测试 MON
-
----
 
 ## 📋 合约交互指南
 
@@ -356,28 +320,6 @@ await quest.completePuzzle(questId, answer);
 // 领取奖励
 await quest.claimReward(questId);
 ```
-
----
-
-## 🔒 安全考虑
-
-### 私钥管理
-- ⚠️ **绝不**将私钥提交到版本控制
-- ✅ 使用 `.env` 文件管理敏感信息
-- ✅ `.env` 文件已添加到 `.gitignore`
-- ✅ 仅在本地环境中保存私钥
-
-### 合约审计
-- 所有合约均使用 OpenZeppelin 标准库
-- ERC20、ERC721 符合国际标准
-- 访问控制使用 Ownable 模式
-- 重要操作具有事件日志
-
-### 用户资产保护
-- Web3 钱包集成（MetaMask）
-- 用户签名验证
-- 链上所有权证明
-- 智能合约 Audit 就绪
 
 ---
 
@@ -464,24 +406,3 @@ await quest.claimReward(questId);
 - **Twitter**: [@MagicStoneGame](https://twitter.com/magicstone)
 
 ---
-
-## 📄 许可证
-
-本项目采用 MIT 许可证。详见 [LICENSE](LICENSE) 文件。
-
----
-
-## 🙏 致谢
-
-感谢以下项目和社区的支持：
-- OpenZeppelin 团队
-- Hardhat 开发团队
-- Monad 生态
-- 所有贡献者
-
----
-
-**项目部署时间**: 2026年1月24日  
-**最后更新**: 2026年1月24日
-
-祝你玩得愉快！🎮✨
