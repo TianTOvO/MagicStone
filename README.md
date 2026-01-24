@@ -15,15 +15,14 @@
 
 ### 1. **打磨站** (PolishingPage)
 - 选择原石和工具进行打磨
-- 使用工具耐久度进行战斗
-- 成功打磨后原石品质升级
+- 使用工具打磨会降低工具耐久度
+- 打磨成功后原石品质升级
 - 实时显示打磨进度和效果
 
 ### 2. **商城** (ShopPage)
 - 购买多个等级的原石（平凡→神秘→奇特→珍稀→璀璨）
 - 购买多个等级的工具（普通→专业→顶级→传奇）
 - 使用游戏币进行交易
-- 管理员功能：直接增加游戏币
 
 ### 3. **工具合成站** (ToolCraftPage)
 - 3:1 合成机制：3个相同等级工具合成1个更高等级工具
@@ -414,24 +413,5 @@ await quest.claimReward(questId);
 - ✅ 7 个游戏页面完成
 - ✅ 完整的 GameFi 生态
 - ✅ Monad 测试网支持
-
----
-
-## 📚 文档参考
-
-- [Hardhat 文档](https://hardhat.org/)
-- [ethers.js 文档](https://docs.ethers.org/v6/)
-- [OpenZeppelin 合约](https://docs.openzeppelin.com/contracts/)
-- [Monad 官方文档](https://docs.monad.xyz/)
-- [Tailwind CSS](https://tailwindcss.com/)
-- [React 文档](https://react.dev/)
-
----
-
-## 📧 联系方式
-
-- **邮箱**: support@magicstone.game
-- **Discord**: [加入社区](https://discord.gg/magicstone)
-- **Twitter**: [@MagicStoneGame](https://twitter.com/magicstone)
 
 ---
