@@ -7,7 +7,7 @@
   "scripts": {
     "dev:client": "vite --host --port 3000",
     "dev": "npm run dev:client",
-    "build:client": "vite build --outDir dist/static",
+    "build:client": "vite build --outDir dist",
     "build": "npm run build:client"
   },
   "dependencies": {
