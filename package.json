@@ -3,6 +3,7 @@
   "private": true,
   "version": "0.0.1",
   "type": "module",
+  "packageManager": "npm@latest",
   "scripts": {
     "dev:client": "vite --host --port 3000",
     "dev": "npm run dev:client",
