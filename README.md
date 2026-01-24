@@ -237,6 +237,35 @@ npm run build
 npm run preview
 ```
 
+### 🚀 Vercel 部署
+
+#### 自动部署（推荐）
+1. 连接 GitHub 仓库到 Vercel
+2. Vercel 自动检测 Vite 项目配置
+3. 自动运行 `npm run build`
+4. 输出目录自动设置为 `dist`
+5. 每次推送到 main 分支时自动部署
+
+#### 手动部署
+```bash
+# 安装 Vercel CLI
+npm install -g vercel
+
+# 部署到 Vercel
+vercel
+```
+
+#### Vercel 部署设置
+- **Build Command**: `npm run build`
+- **Output Directory**: `dist`
+- **Framework**: Vite
+- **Node Version**: 18.x (推荐)
+
+#### 部署后
+- 访问 Vercel 分配的域名（如 `magic-stone.vercel.app`）
+- 配置自定义域名（可选）
+- 设置环境变量（如需要）
+
 ### 智能合约操作
 
 ```bash

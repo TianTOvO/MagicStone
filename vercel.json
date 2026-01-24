@@ -1,0 +1,8 @@
+{
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "framework": "vite",
+  "env": {
+    "MONAD_RPC_URL": "@monad_rpc_url"
+  }
+}
