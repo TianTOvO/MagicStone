@@ -32,7 +32,3 @@ cache/
 *.njsproj
 *.sln
 *.sw?
-
-.env.example
-.editorconfig
-.gitignore
