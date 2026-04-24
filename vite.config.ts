@@ -9,4 +9,9 @@ function getPlugins() {
 
 export default defineConfig({
   plugins: getPlugins(),
+  base: '/',
+  build: {
+    outDir: 'dist',
+    sourcemap: false,
+  },
 });
