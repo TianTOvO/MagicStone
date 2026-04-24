@@ -1,96 +1,143 @@
-
-# 原石狂磨 (Magic Stone) - 完整项目说明文档
+# 原石狂磨 (Magic Stone)
 
 ## 📖 项目概述
 
 **原石狂磨**是一个基于 Web3 的链上游戏平台，融合了 NFT 游戏机制、DeFi 经济系统和 Monad 区块链技术。玩家可以收集、打磨和交易数字资产，体验完整的 GameFi 生态。
 
-**项目状态**: ✅ 已部署到 Monad 测试网
-**部署日期**: 2026年1月24日
-**网络**: Monad Testnet (Chain ID: 10143)
+### 🎮 游戏玩法
+
+在这个游戏中，你将扮演一位原石打磨师，通过以下步骤提升自己的收藏：
+
+1. **收集原石** - 从商城购买不同品质的原石（平凡→神秘→奇特→珍稀→璀璨）
+2. **获取工具** - 购买或合成更高级的打磨工具（普通→专业→顶级→传奇）
+3. **打磨升级** - 使用工具打磨原石，消耗工具耐久度来提升原石品质
+4. **完成任务** - 完成日常和成就任务，获取额外的原石和游戏币奖励
+5. **市场交易** - 在市场上买卖你的 NFT 资产，获取利润或收集稀有物品
+
+### 💎 核心特色
+
+- **真实的链上资产** - 所有原石和工具都是 ERC721 NFT，完全归玩家所有
+- **经济系统** - ERC20 游戏币驱动整个游戏经济，可通过任务和市场获取
+- **工具合成** - 独特的 3:1 合成机制，鼓励玩家收集和升级工具
+- **策略性打磨** - 选择合适的工具和原石组合，最大化打磨效率
+- **市场自由交易** - 玩家可以在市场上自由买卖 NFT，形成活跃的交易生态
+- **任务奖励系统** - 多样化的任务类型，持续激励玩家参与
+
+**项目状态**: ✅ 已部署到 Monad 测试网  
+**网络**: Monad Testnet (Chain ID: 10143)  
+**技术栈**: React + TypeScript + Solidity + Hardhat
 
 ---
 
 ## 🚀 核心功能
 
 ### 1. **打磨站** (PolishingPage)
+
+打磨站是游戏的核心玩法所在，在这里你可以使用工具对原石进行打磨，提升原石的品质等级。
+
+**功能特点：**
 - 选择原石和工具进行打磨
 - 使用工具打磨会降低工具耐久度
 - 打磨成功后原石品质升级
 - 实时显示打磨进度和效果
+- 显示原石当前损伤值和损伤上限
+- 显示工具当前耐久度和耐久上限
+
+**打磨机制：**
+- 每次打磨都会增加原石的损伤值
+- 当损伤值达到损伤上限时，原石可以进行品质升级
+- 不同等级的工具有不同的耐久消耗系数
+- 高级工具损耗更低，效率更高
 
 ### 2. **商城** (ShopPage)
-- 购买多个等级的原石（平凡→神秘→奇特→珍稀→璀璨）
-- 购买多个等级的工具（普通→专业→顶级→传奇）
+
+商城是获取原石和工具的主要途径，提供多种等级的商品供玩家选择。
+
+**可购买物品：**
+- **原石** - 5个品质等级（平凡、神秘、奇特、珍稀、璀璨）
+- **工具** - 4个等级（普通、专业、顶级、传奇）
+
+**商城特点：**
 - 使用游戏币进行交易
+- 不同等级的物品价格不同
+- 实时显示玩家当前游戏币余额
+- 购买后物品直接进入背包
 
 ### 3. **工具合成站** (ToolCraftPage)
-- 3:1 合成机制：3个相同等级工具合成1个更高等级工具
-- 工具等级进阶：普通 → 专业 → 顶级 → 传奇
-- 实时库存管理
+
+工具合成站允许玩家将低级工具合成为更高级的工具，采用 3:1 的合成机制。
+
+**合成规则：**
+- 3个相同等级的工具 = 1个高一级别的工具
+- 普通工具 → 专业工具 → 顶级工具 → 传奇工具
+- 传奇工具为最高等级，无法继续合成
+
+**功能特点：**
+- 实时显示可用于合成的工具数量
 - 合成预览和效果展示
+- 实时库存管理
+- 一键合成操作
 
 ### 4. **任务系统** (QuestsPage)
-- 完成多个难度的谜题任务
-- 获得原石和游戏币奖励
+
+任务系统提供多样化的挑战，完成后可获得原石和游戏币奖励。
+
+**任务类型：**
+- **日常任务** - 每天可完成的常规任务
+- **成就任务** - 一次性的里程碑任务
+
+**任务示例：**
+- 打磨5次原石
+- 收集3块奇特原石
+- 首次打磨成功
+
+**功能特点：**
 - 任务进度追踪
 - 动态难度系统
+- 一键领取奖励
+- 任务状态实时更新
 
 ### 5. **市场** (MarketPage)
+
+市场是玩家之间交易 NFT 的去中心化平台。
+
+**市场功能：**
+- 上架出售原石和工具 NFT
+- 浏览市场上其他玩家的出售列表
+- 购买感兴趣的 NFT 资产
+- 取消自己的上架列表
+
+**市场特点：**
 - NFT 交易平台
-- 出售和购买原石与工具
 - 价格浮动机制
 - 交易历史记录
+- 安全的链上交易
 
 ### 6. **背包** (InventoryPage)
-- 查看所有持有的 NFT
-- 展示原石属性（品质、耐久度等）
-- 展示工具效率系数
+
+背包页面展示玩家拥有的所有 NFT 资产。
+
+**显示内容：**
+- 所有持有的原石 NFT
+- 所有持有的工具 NFT
+- 原石属性（品质、耐久度等）
+- 工具效率系数
 - 资产统计信息
 
-### 7. **主页** (HomePage)
-- 游戏概览和新闻
-- 快速导航
-- 用户统计
-- 社区推荐
-
----
-
-## 🏆 智能合约部署信息
-
-### 部署网络
-- **网络名称**: Monad Testnet
-- **Chain ID**: 10143
-- **RPC**: https://testnet-rpc.monad.xyz/
-- **浏览器**: https://testnet-explorer.monad.xyz/
-
-### 合约地址
-
-| 合约名称 | 功能 | 地址 |
-|---------|------|------|
-| **GameToken** | ERC20 游戏币 | `0xb5AE1693d73de6cA78c6E5e767BDfE510B703Dd5` |
-| **StoneNFT** | ERC721 原石 NFT | `0x719Be548a3499A9eB719C84F8720123f819bA43F` |
-| **ToolNFT** | ERC721 工具 NFT | `0xf3007729f70233d29f8c5Cb38975a6c329945211` |
-| **Market** | NFT 交易市场 | `0xFD333504a7850457f625516FD028E1747fEa5C6F` |
-| **Polishing** | 打磨游戏逻辑 | `0xe9830C45f22Fc383c1C58A8a9cC38B6FD0De5e14` |
-| **Quest** | 任务系统 | `0x4549C7a1D9A941570b3D7be5fE95Ec509eA2230a` |
-
-### 部署部署信息
-
-```
-MagicStoneModule#GameToken - 0xb5AE1693d73de6cA78c6E5e767BDfE510B703Dd5
-MagicStoneModule#StoneNFT - 0x719Be548a3499A9eB719C84F8720123f819bA43F
-MagicStoneModule#ToolNFT - 0xf3007729f70233d29f8c5Cb38975a6c329945211
-MagicStoneModule#Market - 0xFD333504a7850457f625516FD028E1747fEa5C6F
-MagicStoneModule#Polishing - 0xe9830C45f22Fc383c1C58A8a9cC38B6FD0De5e14
-MagicStoneModule#Quest - 0x4549C7a1D9A941570b3D7be5fE95Ec509eA2230a
-```
+**功能特点：**
+- 清晰的资产分类展示
+- 详细的属性信息
+- 快速导航到其他功能页面
+- 资产总数统计
 
 ---
 
 ## 📊 游戏经济系统
 
 ### 原石品质等级
+
+原石的品质等级决定了其价值和升级难度。品质越高，价值越大，但升级所需的打磨次数也越多。
+
 | 品质 | 名称 | 购买价格 | 升级难度 | 特殊属性 |
 |------|------|---------|--------|---------|
 | 1 | 平凡 | 100 币 | ⭐ | 基础原石 |
@@ -100,6 +147,9 @@ MagicStoneModule#Quest - 0x4549C7a1D9A941570b3D7be5fE95Ec509eA2230a
 | 5 | 璀璨 | 3000 币 | ⭐⭐⭐⭐⭐ | 极稀有 |
 
 ### 工具等级系统
+
+工具等级影响打磨效率和耐久消耗。高级工具虽然价格更高，但损耗更低，长期使用更划算。
+
 | 等级 | 名称 | 购买价格 | 耐久上限 | 损耗系数 | 耐久消耗 |
 |------|------|---------|---------|---------|---------|
 | 1 | 普通 | 50 币 | 100 | 1.0 | 0.5 |
@@ -108,6 +158,7 @@ MagicStoneModule#Quest - 0x4549C7a1D9A941570b3D7be5fE95Ec509eA2230a
 | 4 | 传奇 | 2500 币 | 200 | 0.2 | 0.2 |
 
 ### 工具合成规则
+
 ```
 3x 普通工具 → 1x 专业工具
 3x 专业工具 → 1x 顶级工具
@@ -117,301 +168,24 @@ MagicStoneModule#Quest - 0x4549C7a1D9A941570b3D7be5fE95Ec509eA2230a
 
 ---
 
-## 💻 技术栈
 
-### 前端框架
-- **React** 18 - UI 框架
-- **TypeScript** - 类型安全
-- **Vite** 6.4.1 - 构建工具
-- **Tailwind CSS** 3.4.17 - 样式系统
-- **Framer Motion** - 动画库
-- **ethers.js** v6 - Web3 交互
-
-### 智能合约
-- **Solidity** 0.8.28 - 合约语言
-- **OpenZeppelin** - 标准库
-- **Hardhat** - 开发框架
-- **Ignition** - 部署工具
-
-### 区块链网络
-- **Monad Testnet** - 测试网络
-
----
-
-
-## 📁 项目结构
-
-```
-project-root/
-├── contracts/              # 智能合约源码
-│   └── Lock.sol
-├── ignition/              # 部署脚本
-│   └── modules/
-│       └── MagicStone.js   # 主部署模块
-├── src/                   # 前端源代码
-│   ├── App.tsx            # 主应用路由
-│   ├── main.tsx           # 应用入口
-│   ├── index.css          # 全局样式
-│   ├── components/        # 可复用组件
-│   │   ├── Navbar.tsx     # 导航栏
-│   │   ├── Footer.tsx     # 页脚
-│   │   └── Empty.tsx      # 空状态
-│   ├── contexts/          # React Context
-│   │   ├── authContext.ts         # 认证上下文
-│   │   ├── themeContext.tsx       # 主题上下文
-│   │   └── userDataContext.ts     # 用户数据上下文
-│   ├── hooks/             # 自定义 Hooks
-│   │   ├── useTheme.ts           # 主题 Hook
-│   │   └── useContracts.ts       # 合约交互 Hook
-│   ├── lib/               # 工具函数
-│   │   ├── utils.ts              # 通用工具
-│   │   └── contractAddresses.ts  # 合约地址配置
-│   └── pages/             # 页面组件
-│       ├── HomePage.tsx          # 主页
-│       ├── PolishingPage.tsx      # 打磨站
-│       ├── ToolCraftPage.tsx      # 工具合成站
-│       ├── ShopPage.tsx           # 商城
-│       ├── QuestsPage.tsx         # 任务系统
-│       ├── MarketPage.tsx         # 市场
-│       └── InventoryPage.tsx      # 背包
-├── test/                  # 测试文件
-│   └── Lock.js
-├── hardhat.config.cjs     # Hardhat 配置
-├── vite.config.ts         # Vite 构建配置
-├── tsconfig.json          # TypeScript 配置
-├── tailwind.config.js     # Tailwind CSS 配置
-├── package.json           # 项目依赖
-└── .env                   # 环境变量（本地）
-```
-
----
-
-## 🔧 快速开始
-
-### 前置要求
-- Node.js >= 16.0.0
-- npm 或 pnpm
-- MetaMask 或其他 Web3 钱包
-
-### 环境配置
-
-1. **克隆项目**
-   ```bash
-   git clone <repository-url>
-   cd 328219954434
-   ```
-
-2. **安装依赖**
-   ```bash
-   npm install
-   # 或
-   pnpm install
-   ```
-
-3. **配置 .env 文件**
-   ```bash
-   # 复制 .env.example 到 .env
-   cp .env.example .env
-   
-   # 编辑 .env，添加你的私钥
-   MONAD_RPC_URL=https://testnet-rpc.monad.xyz/
-   PRIVATE_KEY=your_private_key_here
-   ```
-
-### 本地开发
-
-```bash
-# 启动开发服务器
-npm run dev
-
-# 访问 http://localhost:5173
-```
-
-### 构建生产版本
-
-```bash
-npm run build
-
-# 预览生产构建
-npm run preview
-```
-
-### 🚀 Vercel 部署
-
-#### 自动部署（推荐）
-1. 连接 GitHub 仓库到 Vercel
-2. Vercel 自动检测 Vite 项目配置
-3. 自动运行 `npm run build`
-4. 输出目录自动设置为 `dist`
-5. 每次推送到 main 分支时自动部署
-
-#### 手动部署
-```bash
-# 安装 Vercel CLI
-npm install -g vercel
-
-# 部署到 Vercel
-vercel
-```
-
-#### Vercel 部署设置
-- **Build Command**: `npm run build`
-- **Output Directory**: `dist`
-- **Framework**: Vite
-- **Node Version**: 18.x (推荐)
-
-#### 部署后
-- 访问 Vercel 分配的域名（如 `magic-stone.vercel.app`）
-- 配置自定义域名（可选）
-- 设置环境变量（如需要）
-
-### 智能合约操作
-
-```bash
-# 编译合约
-npx hardhat compile
-
-# 部署到 Monad 测试网
-npx hardhat ignition deploy ignition/modules/MagicStone.js --network monad
-
-# 本地测试
-npx hardhat test
-```
-
----
-
-
-## 📋 合约交互指南
-
-### GameToken (ERC20)
-```typescript
-// 获取余额
-const balance = await gameToken.balanceOf(userAddress);
-
-// 转账
-await gameToken.transfer(recipientAddress, amount);
-
-// 批准额度
-await gameToken.approve(spenderAddress, amount);
-```
-
-### StoneNFT (ERC721)
-```typescript
-// 铸造原石
-await stoneNFT.mint(userAddress, grade, damage, durability);
-
-// 获取原石属性
-const stone = await stoneNFT.stones(tokenId);
-
-// 升级品质
-await stoneNFT.setGrade(tokenId, newGrade);
-
-// 增加损伤
-await stoneNFT.increaseDamage(tokenId, damageAmount);
-```
-
-### ToolNFT (ERC721)
-```typescript
-// 铸造工具
-await toolNFT.mint(userAddress, level, durability, lossCoeff);
-
-// 减少耐久度
-await toolNFT.decreaseDurability(tokenId, amount);
-```
-
-### Polishing
-```typescript
-// 打磨原石
-await polishing.polish(stoneTokenId, toolTokenId);
-
-// 查看打磨进度
-const progress = await polishing.polishingProgress(stoneTokenId);
-```
-
-### Market
-```typescript
-// 上架 NFT
-await market.listNFT(nftAddress, tokenId, price);
-
-// 购买 NFT
-await market.buyNFT(listingId, { value: price });
-
-// 取消上架
-await market.cancelListing(listingId);
-```
-
-### Quest
-```typescript
-// 完成任务
-await quest.completePuzzle(questId, answer);
-
-// 领取奖励
-await quest.claimReward(questId);
-```
-
----
-
-## 📞 故障排除
-
-### 部署错误
-
-#### 错误: "Invalid params"
-**原因**: `.env` 文件未正确配置或私钥格式错误
-**解决方案**:
-1. 检查 `.env` 文件是否存在
-2. 确保 `PRIVATE_KEY` 是 64 位十六进制数（无 0x 前缀）
-3. 确保 `MONAD_RPC_URL` 正确
-
-#### 错误: "Insufficient funds"
-**原因**: 钱包中 MON 余额不足
-**解决方案**:
-1. 访问 [Monad 水龙头](https://testnet-faucet.monad.xyz/)
-2. 确认钱包地址正确
-3. 等待交易确认
-
-### 连接错误
-
-#### 网络连接失败
-**原因**: MetaMask 未正确配置
-**解决方案**:
-1. 检查 MetaMask 中的网络配置
-2. 确认 RPC URL 为 https://testnet-rpc.monad.xyz/
-3. 切换到其他 RPC 端点重试
-
-### 交易失败
-
-#### 交易被拒绝
-**原因**: 通常是合约调用参数错误
-**解决方案**:
-1. 检查参数类型和值
-2. 确认钱包中有足够的 MON 和游戏币
-3. 查看浏览器控制台的详细错误信息
-
----
-
-## 📈 性能指标
-
-### 构建信息
-- **总大小**: 727.59 KB JavaScript
-- **压缩大小**: 233.29 KB (gzipped)
-- **模块数**: 604 个
-- **构建时间**: < 5 秒
-
-### 游戏性能
-- ✅ 60 FPS 动画
-- ✅ < 100ms 交互响应
-- ✅ < 1s 页面加载
-- ✅ 完全离线缓存支持
-
----
-
-## 🔄 更新日志
-
-### v1.0.0 (2026-01-24)
-- ✅ 初始发布
-- ✅ 6 个核心合约部署
-- ✅ 7 个游戏页面完成
-- ✅ 完整的 GameFi 生态
-- ✅ Monad 测试网支持
-
----
+## 🏆 智能合约架构
+
+### 核心合约
+
+| 合约名称 | 类型 | 功能描述 |
+|---------|------|---------|
+| **GameToken** | ERC20 | 游戏内货币，用于购买物品和任务奖励 |
+| **StoneNFT** | ERC721 | 原石 NFT，记录品质、损伤等属性 |
+| **ToolNFT** | ERC721 | 工具 NFT，记录等级、耐久度等属性 |
+| **Market** | 市场 | NFT 交易市场，支持上架和购买 |
+| **Polishing** | 游戏逻辑 | 打磨机制，处理原石升级和工具消耗 |
+| **Quest** | 任务 | 任务系统，管理任务进度和奖励发放 |
+
+### 合约交互流程
+
+1. **购买流程**：商城合约 → 扣除 GameToken → 铸造 NFT → 转移给玩家
+2. **打磨流程**：打磨合约 → 验证所有权 → 增加损伤 → 消耗工具耐久 → 检查升级条件
+3. **合成流程**：玩家钱包 → 销毁 3 个低级工具 → 铸造 1 个高级工具
+4. **交易流程**：市场合约 → 卖家上架 → 买家支付 → NFT 转移 → Token 转移
+5. **任务流程**：任务合约 → 更新进度 → 检查完成条件 → 发放奖励
