@@ -10,6 +10,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import BackgroundEffect from "@/components/BackgroundEffect";
 import LoginPage from "@/pages/LoginPage";
+import NotFoundPage from "@/pages/NotFoundPage";
 import { useState, useEffect } from "react";
 import { AuthContext } from '@/contexts/authContext';
 import { ThemeProvider } from '@/contexts/themeContext.tsx';
@@ -61,6 +62,7 @@ export default function App() {
                 <Route path="/shop" element={<ShopPage />} />
                 <Route path="/quests" element={<QuestsPage />} />
                 <Route path="/toolcraft" element={<ToolCraftPage />} />
+                <Route path="*" element={<NotFoundPage />} />
               </Routes>
             </main>
             <Footer />

@@ -12,7 +12,6 @@ export default function PolishingPage() {
   const [selectedStone, setSelectedStone] = useState<number | null>(null);
   const [selectedTool, setSelectedTool] = useState<number | null>(null);
   const [isPolishing, setIsPolishing] = useState(false);
-  const [polishingProgress, setPolishingProgress] = useState(0);
 
   const polishableStones = userData.stones.filter(stone => stone.isPolishable);
   const usableTools = userData.tools.filter(tool => tool.durability > 0);
@@ -33,7 +32,6 @@ export default function PolishingPage() {
 
     try {
       setIsPolishing(true);
-      setPolishingProgress(0);
 
       const addresses = getContractAddresses();
       const polishingAddress = addresses.polishing;
@@ -54,31 +52,19 @@ export default function PolishingPage() {
         console.warn('Approval may have failed or already granted');
       }
 
-      const interval = setInterval(() => {
-        setPolishingProgress(prev => {
-          if (prev >= 80) { clearInterval(interval); return 80; }
-          return prev + Math.random() * 20;
-        });
-      }, 200);
-
       toast.loading('正在执行打磨...');
       await polish(selectedStone, selectedTool);
-
-      clearInterval(interval);
-      setPolishingProgress(100);
       toast.success('打磨成功！原石已更新。');
 
       setTimeout(() => {
         setSelectedStone(null);
         setSelectedTool(null);
         setIsPolishing(false);
-        setPolishingProgress(0);
       }, 1500);
     } catch (error) {
       const message = error instanceof Error ? error.message : '打磨失败';
       toast.error(`错误: ${message}`);
       setIsPolishing(false);
-      setPolishingProgress(0);
     }
   };
 
@@ -249,20 +235,34 @@ export default function PolishingPage() {
             </button>
 
             {isPolishing && (
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-purple-600 font-semibold">打磨进度</span>
-                  <span className="text-purple-700 font-bold">{polishingProgress}%</span>
-                </div>
-                <div className="w-full bg-purple-200 rounded-full h-3 border border-purple-300">
-                  <motion.div
-                    className="h-3 rounded-full bg-gradient-to-r from-purple-500 to-pink-500"
-                    initial={{ width: 0 }}
-                    animate={{ width: `${polishingProgress}%` }}
-                    transition={{ duration: 0.1 }}
-                  ></motion.div>
-                </div>
+              <div className="flex items-center justify-center gap-2 py-2 text-purple-600 font-semibold">
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                >
+                  <i className="fas fa-spinner text-lg"></i>
+                </motion.div>
+                交易确认中...
               </div>
+            )}
+
+            {/* Upgrade probability */}
+            {selectedStone && selectedTool && (
+              (() => {
+                const stone = polishableStones.find(s => s.id === selectedStone);
+                const tool = usableTools.find(t => t.id === selectedTool);
+                if (!stone || !tool) return null;
+                const baseArr = [50, 30, 15, 5];
+                const base = baseArr[Math.min(stone.grade, 3)] ?? 0;
+                const chance = Math.min(base + tool.level * 5, 95);
+                return (
+                  <div className="bg-gradient-to-br from-amber-50 to-yellow-50 rounded-lg p-4 text-center border-2 border-amber-300 mb-4">
+                    <p className="text-sm text-amber-700 font-semibold">本次打磨升级概率</p>
+                    <p className="text-3xl font-black text-amber-600">{chance}%</p>
+                    <p className="text-xs text-amber-500 mt-1">基础 {base}% + 工具加成 {tool.level * 5}%</p>
+                  </div>
+                );
+              })()
             )}
 
             <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg p-4 text-sm border-2 border-purple-300">

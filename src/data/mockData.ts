@@ -3,23 +3,23 @@ import { UserData } from '@/types';
 // 模拟用户数据（用于开发和演示）
 export const mockUserData: UserData = {
   stones: [
-    { id: 1, grade: 1, damage: 10, damageLimit: 100, mysterious: false, isPolishable: true },
+    { id: 1, grade: 0, damage: 10, damageLimit: 100, mysterious: false, isPolishable: true },
     { id: 2, grade: 1, damage: 5, damageLimit: 80, mysterious: false, isPolishable: true },
-    { id: 3, grade: 1, damage: 0, damageLimit: 120, mysterious: false, isPolishable: true },
-    { id: 4, grade: 1, damage: 15, damageLimit: 90, mysterious: false, isPolishable: true },
-    { id: 5, grade: 1, damage: 8, damageLimit: 110, mysterious: false, isPolishable: true }
+    { id: 3, grade: 2, damage: 0, damageLimit: 150, mysterious: false, isPolishable: true },
+    { id: 4, grade: 0, damage: 90, damageLimit: 90, mysterious: true, isPolishable: false },
+    { id: 5, grade: 3, damage: 8, damageLimit: 200, mysterious: false, isPolishable: true },
   ],
   tools: [
-    { id: 1, level: 1, durability: 100, durabilityMax: 100, lossCoeff: 1, durabilityConsumption: 1 },
-    { id: 2, level: 1, durability: 100, durabilityMax: 100, lossCoeff: 1, durabilityConsumption: 1 },
-    { id: 3, level: 1, durability: 100, durabilityMax: 100, lossCoeff: 1, durabilityConsumption: 1 },
-    { id: 4, level: 1, durability: 100, durabilityMax: 100, lossCoeff: 1, durabilityConsumption: 1 },
-    { id: 5, level: 1, durability: 100, durabilityMax: 100, lossCoeff: 1, durabilityConsumption: 1 },
-    { id: 6, level: 1, durability: 100, durabilityMax: 100, lossCoeff: 1, durabilityConsumption: 1 },
-    { id: 7, level: 1, durability: 100, durabilityMax: 100, lossCoeff: 1, durabilityConsumption: 1 },
-    { id: 8, level: 1, durability: 100, durabilityMax: 100, lossCoeff: 1, durabilityConsumption: 1 },
-    { id: 9, level: 1, durability: 100, durabilityMax: 100, lossCoeff: 1, durabilityConsumption: 1 },
-    { id: 10, level: 1, durability: 100, durabilityMax: 100, lossCoeff: 1, durabilityConsumption: 1 }
+    { id: 1, level: 0, durability: 100, durabilityMax: 100, lossCoeff: 1, durabilityConsumption: 1 },
+    { id: 2, level: 0, durability: 100, durabilityMax: 100, lossCoeff: 1, durabilityConsumption: 1 },
+    { id: 3, level: 0, durability: 100, durabilityMax: 100, lossCoeff: 1, durabilityConsumption: 1 },
+    { id: 4, level: 1, durability: 80, durabilityMax: 100, lossCoeff: 0.8, durabilityConsumption: 0.8 },
+    { id: 5, level: 1, durability: 100, durabilityMax: 100, lossCoeff: 0.8, durabilityConsumption: 0.8 },
+    { id: 6, level: 2, durability: 90, durabilityMax: 100, lossCoeff: 0.5, durabilityConsumption: 0.5 },
+    { id: 7, level: 0, durability: 100, durabilityMax: 100, lossCoeff: 1, durabilityConsumption: 1 },
+    { id: 8, level: 0, durability: 100, durabilityMax: 100, lossCoeff: 1, durabilityConsumption: 1 },
+    { id: 9, level: 3, durability: 140, durabilityMax: 150, lossCoeff: 0.2, durabilityConsumption: 0.2 },
+    { id: 10, level: 2, durability: 100, durabilityMax: 100, lossCoeff: 0.5, durabilityConsumption: 0.5 },
   ],
   coins: 1000,
   quests: [

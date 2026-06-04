@@ -16,6 +16,8 @@ contract StoneNFT is ERC721, Ownable {
     uint256 public nextId;
     address public polishingContract;
 
+    event PolishingContractUpdated(address oldAddr, address newAddr);
+
     modifier onlyPolishing() {
         require(msg.sender == polishingContract, "Only polishing contract");
         _;
@@ -24,6 +26,7 @@ contract StoneNFT is ERC721, Ownable {
     constructor() ERC721("MagicStone", "MST") Ownable(msg.sender) {}
 
     function setPolishingContract(address _p) external onlyOwner {
+        emit PolishingContractUpdated(polishingContract, _p);
         polishingContract = _p;
     }
 

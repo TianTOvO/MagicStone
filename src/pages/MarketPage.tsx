@@ -277,9 +277,9 @@ export default function MarketPage() {
       market.off('Listed', onListed);
       market.off('Delisted', onDelistedOrSold);
       market.off('Sold', onDelistedOrSold);
-      market.off('OfferMade', () => {});
-      market.off('OfferCancelled', () => {});
-      market.off('OfferAccepted', () => {});
+      market.off('OfferMade');
+      market.off('OfferCancelled');
+      market.off('OfferAccepted');
     };
   }, [contracts.market]);
 

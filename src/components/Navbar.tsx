@@ -1,5 +1,5 @@
 import { useContext, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { ThemeContext } from '@/contexts/themeContext';
 import { UserDataContext } from '@/contexts/userDataContext';
 import { useContracts } from '@/hooks/useContracts';
@@ -11,7 +11,16 @@ export default function Navbar() {
   const { userData } = useContext(UserDataContext);
   const { connected, account, connectWallet, disconnectWallet } = useContracts();
   const { logout } = useContext(AuthContext);
+  const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const isActive = (path: string) => location.pathname === path;
+  const linkClass = (path: string) =>
+    `flex items-center space-x-1 px-3 py-2 rounded-lg text-sm font-bold transition-colors ${
+      isActive(path)
+        ? 'text-blue-600 bg-blue-50'
+        : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50'
+    }`;
 
   return (
     <nav className="sticky top-0 z-40 border-b-2 border-purple-200 bg-white/80 backdrop-blur-md shadow-lg">
@@ -44,7 +53,7 @@ export default function Navbar() {
               <Link
                 key={item.to}
                 to={item.to}
-                className="flex items-center space-x-1 px-3 py-2 rounded-lg text-sm font-bold text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+                className={linkClass(item.to)}
               >
                 <i className={`fas ${item.icon}`}></i>
                 <span>{item.label}</span>
@@ -141,7 +150,7 @@ export default function Navbar() {
                   key={item.to}
                   to={item.to}
                   onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-bold text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+                  className={linkClass(item.to)}
                 >
                   <i className={`fas ${item.icon}`}></i>
                   <span>{item.label}</span>

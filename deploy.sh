@@ -13,7 +13,7 @@ npx hardhat compile
 # Deploy to network
 echo ""
 echo "2. Deploying contracts..."
-npx hardhat run ignition/modules/Deploy.js --network monad
+npx hardhat ignition deploy ignition/modules/MagicStone.js --network monad
 
 echo ""
 echo "=== Deployment Complete ==="

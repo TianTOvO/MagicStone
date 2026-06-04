@@ -15,6 +15,7 @@ contract ToolNFT is ERC721, Ownable {
     uint256 public nextId;
     address public polishingContract;
 
+    event PolishingContractUpdated(address oldAddr, address newAddr);
     event Crafted(address indexed user, uint8 fromLevel, uint8 toLevel, uint256 newId);
 
     modifier onlyPolishing() {
@@ -25,6 +26,7 @@ contract ToolNFT is ERC721, Ownable {
     constructor() ERC721("PolishTool", "PTL") Ownable(msg.sender) {}
 
     function setPolishingContract(address _p) external onlyOwner {
+        emit PolishingContractUpdated(polishingContract, _p);
         polishingContract = _p;
     }
 
