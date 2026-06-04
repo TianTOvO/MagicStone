@@ -30,6 +30,22 @@ export default function PolishingPage() {
 
     if (isPolishing) return;
 
+    // Early validation — before any wallet interaction
+    const stone = polishableStones.find(s => s.id === selectedStone);
+    const tool = usableTools.find(t => t.id === selectedTool);
+    if (!stone || !tool) {
+      toast.error('选择有误，请重新选择');
+      return;
+    }
+    if (stone.damage >= stone.damageLimit) {
+      toast.error('该原石损耗已达上限，无法继续打磨');
+      return;
+    }
+    if (tool.durability <= 0) {
+      toast.error('该工具耐久度已耗尽');
+      return;
+    }
+
     try {
       setIsPolishing(true);
 
