@@ -15,6 +15,8 @@ contract ToolNFT is ERC721, Ownable {
     uint256 public nextId;
     address public polishingContract;
 
+    event Crafted(address indexed user, uint8 fromLevel, uint8 toLevel, uint256 newId);
+
     modifier onlyPolishing() {
         require(msg.sender == polishingContract, "Only polishing contract");
         _;
@@ -27,6 +29,7 @@ contract ToolNFT is ERC721, Ownable {
     }
 
     function mintTool(address to, uint8 level, uint256 durabilityMax) external onlyOwner returns (uint256) {
+        require(to != address(0), "Zero address");
         nextId++;
         tools[nextId] = Tool(level, durabilityMax, durabilityMax);
         _safeMint(to, nextId);
@@ -55,5 +58,28 @@ contract ToolNFT is ERC721, Ownable {
     function burn(uint256 id) external onlyOwner {
         _burn(id);
         delete tools[id];
+    }
+
+    function craftTool(uint256 id1, uint256 id2, uint256 id3) external returns (uint256) {
+        require(ownerOf(id1) == msg.sender, "Not owner of id1");
+        require(ownerOf(id2) == msg.sender, "Not owner of id2");
+        require(ownerOf(id3) == msg.sender, "Not owner of id3");
+
+        uint8 level = tools[id1].level;
+        require(tools[id2].level == level, "Level mismatch");
+        require(tools[id3].level == level, "Level mismatch");
+        require(level < 3, "Already max level");
+
+        _burn(id1); delete tools[id1];
+        _burn(id2); delete tools[id2];
+        _burn(id3); delete tools[id3];
+
+        uint8 newLevel = level + 1;
+        nextId++;
+        tools[nextId] = Tool(newLevel, 100, 100);
+        _safeMint(msg.sender, nextId);
+
+        emit Crafted(msg.sender, level, newLevel, nextId);
+        return nextId;
     }
 }

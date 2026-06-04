@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback, ReactNode } from 'react';
+import { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react';
 import { ethers, BrowserProvider, Contract } from 'ethers';
 import { getContractAddresses } from '../lib/contractAddresses';
 import {
@@ -102,6 +102,44 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     setConnected(false);
     setAccount(null);
   }, []);
+
+  // Auto-reconnect on page load
+  useEffect(() => {
+    const tryReconnect = async () => {
+      if (!window.ethereum) return;
+      try {
+        const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+        if (accounts.length > 0) {
+          await connectWallet();
+        }
+      } catch {
+        // User hasn't granted permission — do nothing
+      }
+    };
+    tryReconnect();
+  }, [connectWallet]);
+
+  // Listen for account/network changes
+  useEffect(() => {
+    if (!window.ethereum) return;
+    const handleAccountsChanged = async (accounts: string[]) => {
+      if (accounts.length === 0) {
+        disconnectWallet();
+      } else {
+        await connectWallet();
+      }
+    };
+    const handleChainChanged = () => {
+      // Reconnect on network change to refresh signer and contract addresses
+      connectWallet();
+    };
+    window.ethereum.on('accountsChanged', handleAccountsChanged);
+    window.ethereum.on('chainChanged', handleChainChanged);
+    return () => {
+      window.ethereum?.removeListener('accountsChanged', handleAccountsChanged);
+      window.ethereum?.removeListener('chainChanged', handleChainChanged);
+    };
+  }, [connectWallet, disconnectWallet]);
 
   const getStoneProps = useCallback(async (stoneId: number) => {
     if (!contracts.stoneNFT) throw new Error('Contract not connected');

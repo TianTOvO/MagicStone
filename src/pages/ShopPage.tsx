@@ -68,7 +68,7 @@ const shopItems: ShopItem[] = [
 
 export default function ShopPage() {
   const { userData, updateUserData } = useContext(UserDataContext);
-  const { connected } = useContracts();
+  const { connected, contracts, account } = useContracts();
   const [selectedItem, setSelectedItem] = useState<ShopItem | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [quantity, setQuantity] = useState(1);
@@ -85,7 +85,34 @@ export default function ShopPage() {
       return;
     }
 
-    if (!connected) {
+    // Try chain minting when connected (requires owner access)
+    let chainMinted = false;
+    if (connected && contracts.stoneNFT && contracts.toolNFT) {
+      try {
+        const toAddr = account!;
+        for (let i = 0; i < quantity; i++) {
+          if (selectedItem.category === 'stone') {
+            await (await contracts.stoneNFT.mintStone(
+              toAddr,
+              selectedItem.grade ?? 0,
+              selectedItem.damageLimitMin ?? 100,
+              selectedItem.mysterious ?? false
+            )).wait();
+          } else {
+            await (await contracts.toolNFT.mintTool(
+              toAddr,
+              selectedItem.level ?? 0,
+              selectedItem.durabilityMax ?? 100
+            )).wait();
+          }
+        }
+        chainMinted = true;
+      } catch {
+        // Not owner or chain error — fall back to local state
+      }
+    }
+
+    if (!connected && !chainMinted) {
       toast.info('建议连接区块链钱包以保存数据');
     }
 

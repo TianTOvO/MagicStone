@@ -3,6 +3,7 @@ import { UserDataContext } from '@/contexts/userDataContext';
 import { useContracts } from '@/hooks/useContracts';
 import { STONE_GRADE_NAMES, TOOL_LEVEL_NAMES } from '@/types';
 import type { MarketListing, MarketOffer, AuctionInfo } from '@/types';
+import { getContractAddresses } from '@/lib/contractAddresses';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 import { ethers, type EventLog } from 'ethers';
@@ -10,7 +11,7 @@ import { createDemoListings, createDemoOffers, createDemoAuctions, DEMO_MY_STONE
 
 export default function MarketPage() {
   const { userData } = useContext(UserDataContext);
-  const { connected, connectWallet, contracts, account, buyItem, listItem, delistItem, makeOffer, cancelOffer, acceptOffer, startAuction, bid, settleAuction, cancelAuction } = useContracts();
+  const { connected, connectWallet, contracts, account, buyItem, listItem, delistItem, makeOffer, cancelOffer, acceptOffer, startAuction, bid, settleAuction, cancelAuction, approveStone, approveTool, approveToken } = useContracts();
   const [activeTab, setActiveTab] = useState<'all' | 'stones' | 'tools' | 'myListings' | 'offers' | 'auctions'>('all');
   const [listings, setListings] = useState<MarketListing[]>([]);
   const [loading, setLoading] = useState(true);
@@ -336,6 +337,8 @@ export default function MarketPage() {
     }
     try {
       setBuying(true);
+      const marketAddr = getContractAddresses().market;
+      await approveToken(marketAddr, String(selectedListing.price));
       await buyItem(selectedListing.isStone, selectedListing.tokenId);
       setListings(prev => prev.filter(l => !(l.isStone === selectedListing.isStone && l.tokenId === selectedListing.tokenId)));
       toast.success('购买成功');
@@ -457,6 +460,12 @@ export default function MarketPage() {
     }
     try {
       setAuctioning(true);
+      const marketAddr = getContractAddresses().market;
+      if (auctionItem.isStone) {
+        await approveStone(marketAddr, auctionItem.tokenId);
+      } else {
+        await approveTool(marketAddr, auctionItem.tokenId);
+      }
       await startAuction(auctionItem.isStone, auctionItem.tokenId, auctionStartPrice, auctionMinIncrement, parseInt(auctionDuration));
       toast.success('拍卖已创建');
       setShowAuctionModal(false);
@@ -491,6 +500,8 @@ export default function MarketPage() {
     }
     try {
       setBidding(true);
+      const marketAddr = getContractAddresses().market;
+      await approveToken(marketAddr, bidAmount);
       await bid(bidTarget.isStone, bidTarget.tokenId, bidAmount);
       toast.success('出价成功');
       setShowBidModal(false);

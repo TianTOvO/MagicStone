@@ -1,5 +1,6 @@
 import { useContext, useState } from 'react';
 import { UserDataContext } from '@/contexts/userDataContext';
+import { useContracts } from '@/hooks/useContracts';
 import { TOOL_LEVEL_NAMES, TOOL_LEVEL_COLORS } from '@/types';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
@@ -16,6 +17,7 @@ const getNextLevel = (currentLevel: number): number | null => {
 
 export default function ToolCraftPage() {
   const { userData, updateUserData } = useContext(UserDataContext);
+  const { connected, contracts } = useContracts();
   const [selectedLevel, setSelectedLevel] = useState<number>(0);
   const [isCrafting, setCrafting] = useState(false);
 
@@ -45,6 +47,24 @@ export default function ToolCraftPage() {
       }
     }
 
+    // Try chain crafting when connected
+    if (connected && contracts.toolNFT) {
+      try {
+        await (await contracts.toolNFT.craftTool(
+          toolsToRemove[0], toolsToRemove[1], toolsToRemove[2]
+        )).wait();
+        toast.success(`成功将3个${TOOL_LEVEL_NAMES[selectedLevel]}工具合成为1个${TOOL_LEVEL_NAMES[nextLevel]}工具！`);
+        setCrafting(false);
+        return;
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : '链上合成失败';
+        toast.error(msg);
+        setCrafting(false);
+        return;
+      }
+    }
+
+    // Local fallback
     const filteredTools = userData.tools.filter(t => !toolsToRemove.includes(t.id));
 
     const newTool = {

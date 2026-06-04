@@ -40,6 +40,7 @@ contract Polishing is Ownable {
         (uint8 level, uint256 durability, ) = tool.getToolProps(toolId);
 
         require(damage < damageLimit, "Stone not polishable");
+        require(grade < 3, "Already max grade");
         require(durability > 0, "Tool has no durability");
 
         uint256 damageIncrease = 10 * (4 - uint256(level));

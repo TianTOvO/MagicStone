@@ -28,6 +28,7 @@ contract StoneNFT is ERC721, Ownable {
     }
 
     function mintStone(address to, uint8 grade, uint256 damageLimit, bool mysterious) external onlyOwner returns (uint256) {
+        require(to != address(0), "Zero address");
         nextId++;
         stones[nextId] = Stone(grade, 0, damageLimit, mysterious);
         _safeMint(to, nextId);

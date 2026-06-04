@@ -199,16 +199,19 @@ contract Market is Ownable {
             : auction.highestBid + auction.minBidIncrement;
         require(_bidAmount >= minBid, "Bid too low");
 
-        // Refund previous highest bidder
-        if (auction.highestBidder != address(0)) {
-            require(token.transfer(auction.highestBidder, auction.highestBid), "Refund failed");
-        }
-
-        // Escrow new bid
+        // Escrow new bid first
         require(token.transferFrom(msg.sender, address(this), _bidAmount), "Bid transfer failed");
+
+        // Then refund previous highest bidder (after state update)
+        address previousBidder = auction.highestBidder;
+        uint256 previousBid = auction.highestBid;
 
         auction.highestBidder = msg.sender;
         auction.highestBid = _bidAmount;
+
+        if (previousBidder != address(0)) {
+            require(token.transfer(previousBidder, previousBid), "Refund failed");
+        }
 
         emit AuctionBid(msg.sender, _isStone, tokenId, _bidAmount);
     }

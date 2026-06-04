@@ -29,6 +29,7 @@ contract Quest is Ownable {
     event QuestCreated(uint256 indexed questId, QuestType questType, uint256 reward);
     event QuestCompleted(address indexed user, uint256 indexed questId);
     event RewardClaimed(address indexed user, uint256 indexed questId, uint256 reward);
+    event QuestActiveUpdated(uint256 indexed questId, bool active);
 
     constructor(address _token) Ownable(msg.sender) {
         token = IERC20(_token);
@@ -43,9 +44,16 @@ contract Quest is Ownable {
         emit QuestCreated(quests.length - 1, questType, reward);
     }
 
+    function setQuestActive(uint256 questId, bool _active) external onlyOwner {
+        require(questId < quests.length, "Invalid quest");
+        quests[questId].active = _active;
+        emit QuestActiveUpdated(questId, _active);
+    }
+
     function assignQuestToUser(address user, uint256 questId) external onlyOwner {
         require(questId < quests.length, "Invalid quest");
         require(quests[questId].active, "Quest not active");
+        require(userProgress[user][questId].claimedAt == 0, "Already claimed");
 
         userQuestIds[user].push(questId);
         userProgress[user][questId] = UserQuestProgress(questId, 0, false, 0);
@@ -77,5 +85,17 @@ contract Quest is Ownable {
 
     function getQuestCount() external view returns (uint256) {
         return quests.length;
+    }
+
+    function getQuestInfo(uint256 questId) external view returns (
+        QuestType questType, string memory description, uint256 reward, bool active
+    ) {
+        require(questId < quests.length, "Invalid quest");
+        QuestInfo storage q = quests[questId];
+        return (q.questType, q.description, q.reward, q.active);
+    }
+
+    function getUserQuestIds(address user) external view returns (uint256[] memory) {
+        return userQuestIds[user];
     }
 }

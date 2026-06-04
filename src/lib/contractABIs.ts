@@ -25,6 +25,8 @@ export const TOOL_NFT_ABI = [
   "function transferFrom(address from, address to, uint256 tokenId)",
   "function setPolishingContract(address _p)",
   "function decreaseDurability(uint256 id, uint256 value)",
+  "function craftTool(uint256 id1, uint256 id2, uint256 id3) returns (uint256)",
+  "event Crafted(address indexed user, uint8 fromLevel, uint8 toLevel, uint256 newId)",
 ];
 
 export const GAME_TOKEN_ABI = [
@@ -72,9 +74,16 @@ export const MARKET_ABI = [
 
 export const QUEST_ABI = [
   "constructor(address _token)",
+  "event QuestCreated(uint256 indexed questId, uint8 questType, uint256 reward)",
   "event QuestCompleted(address indexed user, uint256 indexed questId)",
   "event RewardClaimed(address indexed user, uint256 indexed questId, uint256 reward)",
   "function createQuest(uint8 questType, string description, uint256 reward)",
+  "function setQuestActive(uint256 questId, bool _active)",
   "function assignQuestToUser(address user, uint256 questId)",
+  "function updateProgress(address user, uint256 questId, uint256 increment)",
   "function claimReward(uint256 questId)",
+  "function getQuestCount() view returns (uint256)",
+  "function getQuestInfo(uint256 questId) view returns (uint8 questType, string description, uint256 reward, bool active)",
+  "function getUserQuestIds(address user) view returns (uint256[] memory)",
+  "function userProgress(address user, uint256 questId) view returns (uint256 questId, uint256 progress, bool completed, uint256 claimedAt)",
 ];

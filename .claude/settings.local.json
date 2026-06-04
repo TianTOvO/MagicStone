@@ -31,7 +31,9 @@
       "PowerShell(Copy-Item -Path \"d:\\\\magicStone\\\\node_modules\\\\@openzeppelin\\\\contracts\" -Destination \"d:\\\\magicStone\\\\.deps\\\\npm\\\\@openzeppelin\\\\contracts\" -Recurse -Force)",
       "PowerShell(npx hardhat compile 2>&1)",
       "PowerShell(npx hardhat test 2>&1)",
-      "PowerShell(Rename-Item -Path \"d:\\\\magicStone\\\\test\\\\MagicStone.js\" -NewName \"MagicStone.cjs\")"
+      "PowerShell(Rename-Item -Path \"d:\\\\magicStone\\\\test\\\\MagicStone.js\" -NewName \"MagicStone.cjs\")",
+      "PowerShell(Get-ChildItem -Path \"d:\\\\magicStone\" -Recurse -File | Where-Object { $_.FullName -notmatch \"node_modules|\\\\.git|dist|\\\\.pnp\" } | ForEach-Object { $_.FullName.Replace\\(\"d:\\\\magicStone\\\\\", \"\"\\) } | Sort-Object)",
+      "PowerShell(Get-ChildItem -Path \"d:\\\\magicStone\" -Recurse -File | Where-Object { $_.FullName -notmatch \"node_modules|\\\\.git|dist|\\\\.pnp|\\\\.deps|\\\\.claude\" } | ForEach-Object { $_.FullName.Replace\\(\"d:\\\\magicStone\\\\\", \"\"\\) } | Sort-Object)"
     ]
   }
 }

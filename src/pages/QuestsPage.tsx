@@ -1,4 +1,4 @@
-import { useContext, useState } from 'react';
+import { useContext, useState, useEffect } from 'react';
 import { UserDataContext } from '@/contexts/userDataContext';
 import { useContracts } from '@/hooks/useContracts';
 import { Quest, QUEST_TYPE_INFO } from '@/types';
@@ -22,10 +22,60 @@ export default function QuestsPage() {
   const [puzzleAnswer, setPuzzleAnswer] = useState('');
   const [currentPuzzle, setCurrentPuzzle] = useState<Quest | null>(null);
   const [claimingQuestId, setClaimingQuestId] = useState<number | null>(null);
+  const [chainQuests, setChainQuests] = useState<Quest[]>([]);
+  const [chainProgress, setChainProgress] = useState<Record<number, { progress: number; completed: boolean; claimed: boolean }>>({});
 
-  const quests: Quest[] = mockQuests.map(quest => {
-    const userQuest = userData.quests.find(q => q.id === quest.id);
-    return userQuest ? { ...quest, ...userQuest } : quest;
+  // Load quests from chain when connected
+  useEffect(() => {
+    if (!connected || !contracts.quest) return;
+    (async () => {
+      try {
+        const count = Number(await contracts.quest!.getQuestCount());
+        const quests: Quest[] = [];
+        const progressMap: Record<number, { progress: number; completed: boolean; claimed: boolean }> = {};
+
+        for (let i = 0; i < count; i++) {
+          const info = await contracts.quest!.getQuestInfo(i);
+          const typeNames = ['日常', '成就', '寻宝', '团队'];
+          quests.push({
+            id: i,
+            type: typeNames[Number(info.questType)] || '日常',
+            title: info.description,
+            description: info.description,
+            progress: 0,
+            target: 1,
+            reward: Number(info.reward),
+            isPuzzle: false,
+          });
+        }
+
+        if (account) {
+          const userQuestIds = await contracts.quest!.getUserQuestIds(account);
+          for (const qId of userQuestIds) {
+            const prog = await contracts.quest!.userProgress(account, Number(qId));
+            progressMap[Number(qId)] = {
+              progress: Number(prog.progress),
+              completed: prog.completed,
+              claimed: prog.claimedAt > 0n,
+            };
+          }
+        }
+
+        setChainQuests(quests);
+        setChainProgress(progressMap);
+      } catch {
+        // Chain not available — use mock data
+      }
+    })();
+  }, [connected, contracts.quest, account]);
+
+  const quests: Quest[] = (connected && chainQuests.length > 0 ? chainQuests : mockQuests).map(quest => {
+    const cp = chainProgress[quest.id];
+    const uq = userData.quests.find(q => q.id === quest.id);
+    if (cp) {
+      return { ...quest, ...uq, progress: cp.progress, target: quest.target || 1, claimed: cp.claimed };
+    }
+    return uq ? { ...quest, ...uq } : quest;
   });
 
   const filteredQuests = quests.filter(quest => {
