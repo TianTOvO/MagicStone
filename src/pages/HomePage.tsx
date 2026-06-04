@@ -2,6 +2,7 @@ import { useContext, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { UserDataContext } from '@/contexts/userDataContext';
 import { useContracts } from '@/hooks/useContracts';
+import { STONE_GRADE_COLORS, STONE_GRADE_NAMES, TOOL_LEVEL_COLORS, TOOL_LEVEL_NAMES } from '@/types';
 import { motion } from 'framer-motion';
 
 export default function HomePage() {
@@ -13,43 +14,20 @@ export default function HomePage() {
     setBlockchainStatus(connected ? 'connected' : 'disconnected');
   }, [connected]);
 
-  const getStoneLevelColor = (level: string) => {
-    switch (level) {
-      case '平凡': return 'bg-gray-500';
-      case '奇特': return 'bg-blue-500';
-      case '珍稀': return 'bg-purple-500';
-      case '璀璨': return 'bg-amber-500';
-      default: return 'bg-gray-500';
-    }
-  };
-
-  const getToolLevelColor = (level: string) => {
-    switch (level) {
-      case '普通': return 'bg-gray-500';
-      case '专业': return 'bg-green-500';
-      case '顶级': return 'bg-blue-500';
-      case '传奇': return 'bg-purple-500';
-      default: return 'bg-gray-500';
-    }
-  };
-
-  // 提取玩家信息
   const stats = {
     totalStones: userData.stones.length,
     totalTools: userData.tools.length,
     coins: userData.coins,
     activeQuests: userData.quests.filter(q => q.progress < q.target).length,
     completedQuests: userData.quests.filter(q => q.progress >= q.target).length,
-    highestStoneLevel: [...userData.stones].sort((a, b) => {
-      const levels = { '平凡': 1, '奇特': 2, '珍稀': 3, '璀璨': 4 };
-      return levels[b.level as keyof typeof levels] - levels[a.level as keyof typeof levels];
-    })[0]?.level || '无',
+    highestStoneGrade: userData.stones.length > 0
+      ? STONE_GRADE_NAMES[Math.max(...userData.stones.map(s => s.grade))]
+      : '无',
   };
 
   return (
     <div className="space-y-8">
-      {/* 欢迎区域 */}
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
@@ -64,7 +42,7 @@ export default function HomePage() {
           </div>
           <div className="text-right">
             {blockchainStatus === 'connected' && account ? (
-              <motion.div 
+              <motion.div
                 className="bg-gradient-to-r from-green-100 to-emerald-100 border-2 border-green-400 rounded-xl px-4 py-3 shadow-md"
                 animate={{ scale: [1, 1.02, 1] }}
                 transition={{ duration: 2, repeat: Infinity }}
@@ -87,9 +65,8 @@ export default function HomePage() {
         </div>
       </motion.div>
 
-      {/* 数据概览卡片 */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0 }}
@@ -98,17 +75,17 @@ export default function HomePage() {
         >
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-gray-700 text-sm font-bold">我的原石</h3>
-            <motion.i 
+            <motion.i
               className="fas fa-gem text-blue-600 text-2xl"
               animate={{ rotate: [0, 10, -10, 0] }}
               transition={{ duration: 2, repeat: Infinity }}
             ></motion.i>
           </div>
           <p className="text-4xl font-black text-blue-700">{stats.totalStones}</p>
-          <p className="text-sm text-blue-600 mt-2 font-semibold">最高等级: {stats.highestStoneLevel}</p>
+          <p className="text-sm text-blue-600 mt-2 font-semibold">最高等级: {stats.highestStoneGrade}</p>
         </motion.div>
 
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
@@ -117,7 +94,7 @@ export default function HomePage() {
         >
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-gray-700 text-sm font-bold">打磨工具</h3>
-            <motion.i 
+            <motion.i
               className="fas fa-tools text-green-600 text-2xl"
               animate={{ rotate: [0, -15, 15, 0] }}
               transition={{ duration: 2, repeat: Infinity }}
@@ -127,7 +104,7 @@ export default function HomePage() {
           <p className="text-sm text-green-600 mt-2 font-semibold">可用于打磨和合成</p>
         </motion.div>
 
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
@@ -136,7 +113,7 @@ export default function HomePage() {
         >
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-gray-700 text-sm font-bold">游戏币</h3>
-            <motion.i 
+            <motion.i
               className="fas fa-coins text-yellow-600 text-2xl"
               animate={{ y: [0, -5, 0] }}
               transition={{ duration: 1.5, repeat: Infinity }}
@@ -146,7 +123,7 @@ export default function HomePage() {
           <p className="text-sm text-yellow-600 mt-2 font-semibold">可在商城和市场使用</p>
         </motion.div>
 
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
@@ -155,7 +132,7 @@ export default function HomePage() {
         >
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-gray-700 text-sm font-bold">任务进度</h3>
-            <motion.i 
+            <motion.i
               className="fas fa-tasks text-purple-600 text-2xl"
               animate={{ scale: [1, 1.2, 1] }}
               transition={{ duration: 2, repeat: Infinity }}
@@ -166,7 +143,6 @@ export default function HomePage() {
         </motion.div>
       </div>
 
-      {/* 快速操作 */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <motion.div
           initial={{ opacity: 0, x: -20 }}
@@ -177,7 +153,7 @@ export default function HomePage() {
         >
           <Link to="/polishing" className="h-full flex flex-col justify-between">
             <div>
-              <motion.i 
+              <motion.i
                 className="fas fa-wrench text-5xl text-blue-600 mb-4"
                 animate={{ rotate: [0, 15, 0] }}
                 transition={{ duration: 2, repeat: Infinity }}
@@ -185,7 +161,7 @@ export default function HomePage() {
               <h3 className="text-2xl font-black text-gray-800 mb-2">开始打磨</h3>
               <p className="text-gray-700 text-base font-medium">打磨你的原石，提升它们的等级和价值</p>
             </div>
-            <motion.div 
+            <motion.div
               className="mt-4 text-blue-600 text-base font-bold flex items-center"
               whileHover={{ x: 5 }}
             >
@@ -203,7 +179,7 @@ export default function HomePage() {
         >
           <Link to="/shop" className="h-full flex flex-col justify-between">
             <div>
-              <motion.i 
+              <motion.i
                 className="fas fa-store text-5xl text-purple-600 mb-4"
                 animate={{ scale: [1, 1.1, 1] }}
                 transition={{ duration: 2, repeat: Infinity }}
@@ -211,7 +187,7 @@ export default function HomePage() {
               <h3 className="text-2xl font-black text-gray-800 mb-2">商城购物</h3>
               <p className="text-gray-700 text-base font-medium">购买更多原石和工具，扩展你的收藏</p>
             </div>
-            <motion.div 
+            <motion.div
               className="mt-4 text-purple-600 text-base font-bold flex items-center"
               whileHover={{ x: 5 }}
             >
@@ -229,7 +205,7 @@ export default function HomePage() {
         >
           <Link to="/quests" className="h-full flex flex-col justify-between">
             <div>
-              <motion.i 
+              <motion.i
                 className="fas fa-clipboard-list text-5xl text-green-600 mb-4"
                 animate={{ rotate: [0, -10, 0] }}
                 transition={{ duration: 2, repeat: Infinity }}
@@ -237,7 +213,7 @@ export default function HomePage() {
               <h3 className="text-2xl font-black text-gray-800 mb-2">完成任务</h3>
               <p className="text-gray-700 text-base font-medium">完成任务获取奖励，加速你的游戏进程</p>
             </div>
-            <motion.div 
+            <motion.div
               className="mt-4 text-green-600 text-base font-bold flex items-center"
               whileHover={{ x: 5 }}
             >
@@ -247,7 +223,6 @@ export default function HomePage() {
         </motion.div>
       </div>
 
-      {/* 最近资产 */}
       <div>
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-3xl font-black text-gray-800">最近资产</h2>
@@ -257,7 +232,6 @@ export default function HomePage() {
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
-          {/* 显示最近的3个原石 */}
           {userData.stones.slice(0, 3).map((stone) => (
             <motion.div
               key={stone.id}
@@ -267,19 +241,18 @@ export default function HomePage() {
               className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-5 border-2 border-blue-300 shadow-md"
             >
               <div className="relative h-28 flex items-center justify-center mb-4">
-                <motion.div 
-                  className={`absolute inset-0 rounded-full ${getStoneLevelColor(stone.level)} opacity-20 blur-xl`}
+                <motion.div
+                  className={`absolute inset-0 rounded-full ${STONE_GRADE_COLORS[stone.grade]} opacity-20 blur-xl`}
                   animate={{ scale: [1, 1.1, 1] }}
                   transition={{ duration: 2, repeat: Infinity }}
                 ></motion.div>
                 <i className="fas fa-gem text-5xl text-blue-600 relative"></i>
               </div>
-              <h4 className="text-center font-bold text-gray-800 text-sm">{stone.level}原石</h4>
-              <p className="text-center text-gray-600 text-xs mt-2 font-semibold">{stone.损耗值}/{stone.损耗上限}</p>
+              <h4 className="text-center font-bold text-gray-800 text-sm">{STONE_GRADE_NAMES[stone.grade]}原石</h4>
+              <p className="text-center text-gray-600 text-xs mt-2 font-semibold">{stone.damage}/{stone.damageLimit}</p>
             </motion.div>
           ))}
 
-          {/* 显示最近的2个工具 */}
           {userData.tools.slice(0, 2).map((tool) => (
             <motion.div
               key={tool.id}
@@ -289,15 +262,15 @@ export default function HomePage() {
               className="bg-gradient-to-br from-green-50 to-emerald-100 rounded-2xl p-5 border-2 border-green-300 shadow-md"
             >
               <div className="relative h-28 flex items-center justify-center mb-4">
-                <motion.div 
-                  className={`absolute inset-0 rounded-full ${getToolLevelColor(tool.level)} opacity-20 blur-xl`}
+                <motion.div
+                  className={`absolute inset-0 rounded-full ${TOOL_LEVEL_COLORS[tool.level]} opacity-20 blur-xl`}
                   animate={{ scale: [1, 1.1, 1] }}
                   transition={{ duration: 2, repeat: Infinity }}
                 ></motion.div>
                 <i className="fas fa-wrench text-5xl text-green-600 relative"></i>
               </div>
-              <h4 className="text-center font-bold text-gray-800 text-sm">{tool.level}工具</h4>
-              <p className="text-center text-gray-600 text-xs mt-2 font-semibold">{tool.当前耐久值}/{tool.耐久上限}</p>
+              <h4 className="text-center font-bold text-gray-800 text-sm">{TOOL_LEVEL_NAMES[tool.level]}工具</h4>
+              <p className="text-center text-gray-600 text-xs mt-2 font-semibold">{tool.durability}/{tool.durabilityMax}</p>
             </motion.div>
           ))}
         </div>

@@ -2,14 +2,7 @@
 pragma solidity ^0.8.28;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
-
-interface IERC721 {
-    function ownerOf(uint256 tokenId) external view returns (address);
-}
-
-interface IERC20 {
-    function transfer(address to, uint256 amount) external returns (bool);
-}
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract Quest is Ownable {
     enum QuestType { Daily, Achievement, Treasure, Team }

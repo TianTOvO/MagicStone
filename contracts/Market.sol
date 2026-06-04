@@ -2,16 +2,8 @@
 pragma solidity ^0.8.28;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
-
-interface IERC721 {
-    function ownerOf(uint256 tokenId) external view returns (address);
-    function transferFrom(address from, address to, uint256 tokenId) external;
-}
-
-interface IERC20 {
-    function transferFrom(address from, address to, uint256 amount) external returns (bool);
-    function transfer(address to, uint256 amount) external returns (bool);
-}
+import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract Market is Ownable {
     struct Listing {
@@ -55,7 +47,7 @@ contract Market is Ownable {
         require(listing.seller == msg.sender, "Not seller");
 
         listing.active = false;
-        emit Delisted(msg.sender, _isStone, tokenId);
+        emit Delisted(msg.sender, _isStone, tokenId); 
     }
 
     function buy(bool _isStone, uint256 tokenId) external {

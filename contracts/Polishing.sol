@@ -32,7 +32,6 @@ contract Polishing is Ownable {
         tool = IToolNFT(_tool);
     }
 
-    // Basic polish flow: checks ownership, damage/durability, computes changes, executes random upgrade
     function polish(uint256 stoneId, uint256 toolId) external {
         require(stone.ownerOf(stoneId) == msg.sender, "Not stone owner");
         require(tool.ownerOf(toolId) == msg.sender, "Not tool owner");
@@ -43,39 +42,40 @@ contract Polishing is Ownable {
         require(damage < damageLimit, "Stone not polishable");
         require(durability > 0, "Tool has no durability");
 
-        // Simple formulas (tweakable): higher tool level reduces damage increase and durability loss
-        uint256 baseDamage = 10;
-        uint256 damageIncrease = baseDamage * (4 - uint256(level)); // level 0 -> *4, level3 -> *1
+        uint256 damageIncrease = 10 * (4 - uint256(level));
         if (damageIncrease == 0) damageIncrease = 1;
 
-        uint256 baseDurLoss = 5;
-        uint256 durabilityLoss = baseDurLoss * (4 - uint256(level));
+        uint256 durabilityLoss = 5 * (4 - uint256(level));
         if (durabilityLoss == 0) durabilityLoss = 1;
 
-        // Success chance: base by grade (0:50,1:30,2:15,3:5) adjusted by tool level (+5% per tool level)
-        uint256 baseChance;
-        if (grade == 0) baseChance = 50;
-        else if (grade == 1) baseChance = 30;
-        else if (grade == 2) baseChance = 15;
-        else baseChance = 5;
-
-        uint256 chance = baseChance + uint256(level) * 5;
-        if (chance > 95) chance = 95;
-
-        // Pseudo-random (placeholder for VRF)
-        uint256 rand = uint256(keccak256(abi.encodePacked(block.timestamp, msg.sender, stoneId, toolId, block.prevrandao))) % 100;
-        bool upgraded = rand < chance;
-
-        // update states via NFT contracts
         stone.increaseDamage(stoneId, damageIncrease);
         tool.decreaseDurability(toolId, durabilityLoss);
 
+        bool upgraded = _rollUpgrade(grade, level, stoneId, toolId);
+
         uint8 newGrade = grade;
-        if (upgraded) {
-            if (newGrade < 3) newGrade = newGrade + 1;
+        if (upgraded && grade < 3) {
+            newGrade = grade + 1;
             stone.setGrade(stoneId, newGrade);
         }
 
         emit Polished(msg.sender, stoneId, toolId, upgraded, newGrade);
+    }
+
+    function _upgradeChance(uint8 grade, uint8 level) internal pure returns (uint256) {
+        uint256 base;
+        if (grade == 0) base = 50;
+        else if (grade == 1) base = 30;
+        else if (grade == 2) base = 15;
+        else base = 5;
+
+        uint256 chance = base + uint256(level) * 5;
+        return chance > 95 ? 95 : chance;
+    }
+
+    function _rollUpgrade(uint8 grade, uint8 level, uint256 stoneId, uint256 toolId) internal view returns (bool) {
+        uint256 chance = _upgradeChance(grade, level);
+        uint256 rand = uint256(keccak256(abi.encodePacked(block.timestamp, msg.sender, stoneId, toolId, block.prevrandao))) % 100;
+        return rand < chance;
     }
 }
