@@ -17,9 +17,7 @@ dist-ssr
 .env.local
 
 # Hardhat compile artifacts and cache
-artifacts
 artifacts/
-cache
 cache/
 
 # Editor directories and files
@@ -32,3 +30,9 @@ cache/
 *.njsproj
 *.sln
 *.sw?
+
+*.png
+*.jpg
+*.jpeg
+
+DOCS

@@ -1,0 +1,37 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Get-ChildItem -Recurse -Depth 2 -Name)",
+      "Bash(move \"d:\\\\magicStone\\\\src\\\\components\\\\LoginPage.tsx\" \"d:\\\\magicStone\\\\src\\\\pages\\\\LoginPage.tsx\")",
+      "PowerShell(Move-Item \"d:\\\\magicStone\\\\src\\\\components\\\\LoginPage.tsx\" \"d:\\\\magicStone\\\\src\\\\pages\\\\LoginPage.tsx\")",
+      "Bash(git rm *)",
+      "Bash(npx tsc *)",
+      "Bash(npx -p typescript tsc --noEmit)",
+      "Bash(./node_modules/.bin/tsc --noEmit)",
+      "PowerShell(& \"d:\\\\magicStone\\\\node_modules\\\\.bin\\\\tsc.ps1\" --noEmit 2>&1)",
+      "Bash(npm install *)",
+      "Bash(npx vite *)",
+      "Bash(npx hardhat *)",
+      "PowerShell(if \\(-not \\(Test-Path \"d:\\\\magicStone\\\\.vscode\"\\)\\) { New-Item -ItemType Directory -Path \"d:\\\\magicStone\\\\.vscode\" -Force })",
+      "mcp__plugin_chrome-devtools-mcp_chrome-devtools__list_pages",
+      "Bash(npm run *)",
+      "mcp__plugin_chrome-devtools-mcp_chrome-devtools__new_page",
+      "mcp__plugin_chrome-devtools-mcp_chrome-devtools__list_console_messages",
+      "mcp__plugin_chrome-devtools-mcp_chrome-devtools__list_network_requests",
+      "PowerShell(Get-NetTCPConnection -LocalPort 3000,3001,3002,3003 -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force -ErrorAction SilentlyContinue })",
+      "Bash(Move-Item -Path \"d:\\\\magicStone\\\\contracts\\\\.deps\" -Destination \"d:\\\\magicStone\\\\.deps\")",
+      "PowerShell(Move-Item -Path \"d:\\\\magicStone\\\\contracts\\\\.deps\" -Destination \"d:\\\\magicStone\\\\.deps\")",
+      "PowerShell(cmd /c \"move D:\\\\magicStone\\\\contracts\\\\.deps D:\\\\magicStone\\\\.deps\")",
+      "PowerShell($acl = Get-Acl \"d:\\\\magicStone\\\\contracts\\\\.deps\"; $acl.Access | Format-Table IdentityReference, FileSystemRights, AccessControlType)",
+      "PowerShell(robocopy \"D:\\\\magicStone\\\\contracts\\\\.deps\" \"D:\\\\magicStone\\\\.deps\" /E /MOVE)",
+      "PowerShell(npx solc@0.8.28 --version 2>&1)",
+      "PowerShell(npx solc@0.8.28 --base-path . --include-path node_modules contracts/StoneNFT.sol 2>&1)",
+      "PowerShell($remappings = \"node_modules/@openzeppelin/=node_modules/@openzeppelin/\")",
+      "PowerShell(New-Item -ItemType Directory -Path \"d:\\\\magicStone\\\\.deps\\\\npm\\\\@openzeppelin\" -Force)",
+      "PowerShell(Copy-Item -Path \"d:\\\\magicStone\\\\node_modules\\\\@openzeppelin\\\\contracts\" -Destination \"d:\\\\magicStone\\\\.deps\\\\npm\\\\@openzeppelin\\\\contracts\" -Recurse -Force)",
+      "PowerShell(npx hardhat compile 2>&1)",
+      "PowerShell(npx hardhat test 2>&1)",
+      "PowerShell(Rename-Item -Path \"d:\\\\magicStone\\\\test\\\\MagicStone.js\" -NewName \"MagicStone.cjs\")"
+    ]
+  }
+}
