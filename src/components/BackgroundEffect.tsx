@@ -15,12 +15,16 @@ const PARTICLE_COUNT = 100;
 const CONNECTION_DIST = 180;
 const MOUSE_ATTRACT_RADIUS = 220;
 const MOUSE_ATTRACT_FORCE = 0.04;
+const SHOCKWAVE_RADIUS = 120;
+const SHOCKWAVE_FORCE = 0.05;
+const SHOCKWAVE_DURATION = 800; // ms
 
 export default function BackgroundEffect() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const mouseRef = useRef({ x: -1000, y: -1000 });
   const particlesRef = useRef<Particle[]>([]);
   const animRef = useRef<number>(0);
+  const shockwaveRef = useRef({ x: 0, y: 0, time: 0 });
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -62,21 +66,55 @@ export default function BackgroundEffect() {
     window.addEventListener('mousemove', onMouseMove);
     window.addEventListener('mouseleave', onMouseLeave);
 
+    // Double-click shockwave
+    const onDblClick = (e: MouseEvent) => {
+      shockwaveRef.current = { x: e.clientX, y: e.clientY, time: performance.now() };
+    };
+    window.addEventListener('dblclick', onDblClick);
+
     // Animation loop
     const animate = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       const { x: mx, y: my } = mouseRef.current;
+      const mouseActive = mx > 0 && my > 0;
+      const now = performance.now();
+      const shockwave = shockwaveRef.current;
+      const shockElapsed = now - shockwave.time;
+      const shockActive = shockElapsed < SHOCKWAVE_DURATION;
+
+      // Draw shockwave ring
+      if (shockActive && shockwave.time > 0) {
+        const progress = shockElapsed / SHOCKWAVE_DURATION;
+        const ringRadius = progress * SHOCKWAVE_RADIUS;
+        ctx.beginPath();
+        ctx.arc(shockwave.x, shockwave.y, ringRadius, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(96, 165, 250, ${0.5 * (1 - progress)})`; // light blue, fading
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      }
 
       // Update & draw particles
       for (const p of particles) {
-        // Mouse attraction
-        const dx = mx - p.x;
-        const dy = my - p.y;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        if (dist < MOUSE_ATTRACT_RADIUS && dist > 0) {
-          const force = (MOUSE_ATTRACT_RADIUS - dist) / MOUSE_ATTRACT_RADIUS;
-          p.vx += (dx / dist) * force * MOUSE_ATTRACT_FORCE;
-          p.vy += (dy / dist) * force * MOUSE_ATTRACT_FORCE;
+        // Shockwave repulsion (overrides mouse attraction)
+        if (shockActive && shockwave.time > 0) {
+          const sdx = p.x - shockwave.x;
+          const sdy = p.y - shockwave.y;
+          const sdist = Math.sqrt(sdx * sdx + sdy * sdy);
+          if (sdist < SHOCKWAVE_RADIUS && sdist > 1) {
+            const force = (1 - shockElapsed / SHOCKWAVE_DURATION) * (1 - sdist / SHOCKWAVE_RADIUS);
+            p.vx += (sdx / sdist) * force * SHOCKWAVE_FORCE;
+            p.vy += (sdy / sdist) * force * SHOCKWAVE_FORCE;
+          }
+        } else if (mouseActive) {
+          // Mouse attraction (only when no active shockwave)
+          const dx = mx - p.x;
+          const dy = my - p.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < MOUSE_ATTRACT_RADIUS && dist > 0) {
+            const force = (MOUSE_ATTRACT_RADIUS - dist) / MOUSE_ATTRACT_RADIUS;
+            p.vx += (dx / dist) * force * MOUSE_ATTRACT_FORCE;
+            p.vy += (dy / dist) * force * MOUSE_ATTRACT_FORCE;
+          }
         }
 
         // Move
@@ -135,9 +173,9 @@ export default function BackgroundEffect() {
           const dy = particles[i].y - particles[j].y;
           const dist = Math.sqrt(dx * dx + dy * dy);
           if (dist < CONNECTION_DIST) {
-            const opacity = (1 - dist / CONNECTION_DIST) * 0.18;
+            const opacity = (1 - dist / CONNECTION_DIST) * 0.5;
             ctx.strokeStyle = `rgba(99, 102, 241, ${opacity})`; // indigo
-            ctx.lineWidth = 0.5;
+            ctx.lineWidth = 1;
             ctx.beginPath();
             ctx.moveTo(particles[i].x, particles[i].y);
             ctx.lineTo(particles[j].x, particles[j].y);
@@ -146,16 +184,24 @@ export default function BackgroundEffect() {
         }
       }
 
-      // Mouse connection lines (stronger)
-      if (mx > 0 && my > 0) {
+      // Mouse connection lines — only when mouse is active AND no shockwave
+      if (mouseActive && !shockActive) {
         for (const p of particles) {
           const dx = mx - p.x;
           const dy = my - p.y;
           const dist = Math.sqrt(dx * dx + dy * dy);
           if (dist < CONNECTION_DIST) {
-            const opacity = (1 - dist / CONNECTION_DIST) * 0.3;
-            ctx.strokeStyle = `rgba(139, 92, 246, ${opacity})`; // violet
-            ctx.lineWidth = 1;
+            const opacity = (1 - dist / CONNECTION_DIST) * 0.45;
+            // Glow layer
+            ctx.strokeStyle = `rgba(245, 158, 11, ${opacity * 0.3})`; // amber glow
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(mx, my);
+            ctx.lineTo(p.x, p.y);
+            ctx.stroke();
+            // Core line
+            ctx.strokeStyle = `rgba(245, 158, 11, ${opacity})`; // amber
+            ctx.lineWidth = 1.5;
             ctx.beginPath();
             ctx.moveTo(mx, my);
             ctx.lineTo(p.x, p.y);
@@ -173,14 +219,34 @@ export default function BackgroundEffect() {
       window.removeEventListener('resize', resize);
       window.removeEventListener('mousemove', onMouseMove);
       window.removeEventListener('mouseleave', onMouseLeave);
+      window.removeEventListener('dblclick', onDblClick);
     };
   }, []);
 
   return (
-    <canvas
-      ref={canvasRef}
-      className="fixed inset-0 w-full h-full pointer-events-none z-0"
-      style={{ opacity: 0.85 }}
-    />
+    <>
+      {/* Static decorative shapes */}
+      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden" aria-hidden="true">
+        <div className="absolute top-[8%] left-[5%] w-40 h-40 bg-purple-300 rounded-full opacity-[0.07]" />
+        <div className="absolute top-[15%] right-[10%] w-56 h-56 bg-blue-300 opacity-[0.06]"
+          style={{ clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)' }} />
+        <div className="absolute top-[60%] left-[12%] w-32 h-32 bg-indigo-300 opacity-[0.07]"
+          style={{ clipPath: 'polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%)' }} />
+        <div className="absolute top-[40%] right-[8%] w-48 h-48 bg-violet-300 rounded-full opacity-[0.06]" />
+        <div className="absolute bottom-[20%] left-[35%] w-36 h-36 bg-blue-300 opacity-[0.07]"
+          style={{ clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)' }} />
+        <div className="absolute top-[75%] right-[25%] w-44 h-44 bg-purple-300 rounded-full opacity-[0.06]" />
+        <div className="absolute top-[5%] left-[45%] w-28 h-28 bg-indigo-300 opacity-[0.07]"
+          style={{ clipPath: 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)' }} />
+        <div className="absolute bottom-[10%] right-[5%] w-52 h-52 bg-violet-300 opacity-[0.06]"
+          style={{ clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)' }} />
+      </div>
+
+      <canvas
+        ref={canvasRef}
+        className="fixed inset-0 w-full h-full pointer-events-none z-0"
+        style={{ opacity: 0.85 }}
+      />
+    </>
   );
 }

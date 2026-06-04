@@ -546,7 +546,7 @@ export default function MarketPage() {
         initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
         className="bg-gradient-to-r from-cyan-50 via-blue-50 to-purple-50 rounded-2xl p-8 border-2 border-blue-200 shadow-xl"
       >
-        <h1 className="text-4xl font-black mb-2 bg-clip-text text-transparent bg-gradient-to-r from-cyan-600 via-blue-600 to-purple-600">NFT 交易所</h1>
+        <h1 className="text-4xl font-black mb-2 bg-clip-text text-transparent bg-gradient-to-r from-cyan-600 via-blue-600 to-purple-600">交易所</h1>
         <p className="text-gray-700 text-lg font-medium">自由买卖原石和工具 · 挂单、出价、即时成交</p>
         {demoMode && (
           <div className="mt-3 flex items-center gap-3">
