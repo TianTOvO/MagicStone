@@ -60,6 +60,18 @@ export interface MarketOffer {
   active: boolean;
 }
 
+export interface AuctionInfo {
+  isStone: boolean;
+  tokenId: number;
+  seller: string;
+  startPrice: number;
+  minBidIncrement: number;
+  endTime: number;
+  highestBidder: string;
+  highestBid: number;
+  active: boolean;
+}
+
 // ============================================================
 // Display name mappings
 // ============================================================

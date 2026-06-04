@@ -41,6 +41,11 @@ interface WalletContextType {
   acceptOffer: (isStone: boolean, tokenId: number, buyer: string) => Promise<any>;
   getOffer: (isStone: boolean, tokenId: number) => Promise<{ buyer: string; price: bigint; active: boolean }>;
   getSaleHistory: (isStone: boolean, tokenId: number) => Promise<bigint[]>;
+  startAuction: (isStone: boolean, tokenId: number, startPrice: string, minIncrement: string, duration: number) => Promise<any>;
+  bid: (isStone: boolean, tokenId: number, bidAmount: string) => Promise<any>;
+  settleAuction: (isStone: boolean, tokenId: number) => Promise<any>;
+  cancelAuction: (isStone: boolean, tokenId: number) => Promise<any>;
+  getAuction: (isStone: boolean, tokenId: number) => Promise<any>;
   getTokenBalance: (address: string) => Promise<string>;
   approveStone: (spender: string, tokenId: number) => Promise<any>;
   approveTool: (spender: string, tokenId: number) => Promise<any>;
@@ -163,6 +168,31 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     return await contracts.market.getSaleHistory(isStone, tokenId);
   }, [contracts.market]);
 
+  const startAuction = useCallback(async (isStone: boolean, tokenId: number, startPrice: string, minIncrement: string, duration: number) => {
+    if (!contracts.market) throw new Error('Contract not connected');
+    return await (await contracts.market.startAuction(isStone, tokenId, ethers.parseEther(startPrice), ethers.parseEther(minIncrement), duration)).wait();
+  }, [contracts.market]);
+
+  const bid = useCallback(async (isStone: boolean, tokenId: number, bidAmount: string) => {
+    if (!contracts.market) throw new Error('Contract not connected');
+    return await (await contracts.market.bid(isStone, tokenId, ethers.parseEther(bidAmount))).wait();
+  }, [contracts.market]);
+
+  const settleAuction = useCallback(async (isStone: boolean, tokenId: number) => {
+    if (!contracts.market) throw new Error('Contract not connected');
+    return await (await contracts.market.settleAuction(isStone, tokenId)).wait();
+  }, [contracts.market]);
+
+  const cancelAuction = useCallback(async (isStone: boolean, tokenId: number) => {
+    if (!contracts.market) throw new Error('Contract not connected');
+    return await (await contracts.market.cancelAuction(isStone, tokenId)).wait();
+  }, [contracts.market]);
+
+  const getAuction = useCallback(async (isStone: boolean, tokenId: number) => {
+    if (!contracts.market) throw new Error('Contract not connected');
+    return await contracts.market.getAuction(isStone, tokenId);
+  }, [contracts.market]);
+
   const getTokenBalance = useCallback(async (address: string) => {
     if (!contracts.gameToken) throw new Error('Contract not connected');
     const balance = await contracts.gameToken.balanceOf(address);
@@ -191,7 +221,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
       getStoneProps, setStonePolishingContract,
       getToolProps, setToolPolishingContract,
       polish, listItem, delistItem, buyItem, makeOffer, cancelOffer, acceptOffer,
-      getOffer, getSaleHistory, getTokenBalance,
+      getOffer, getSaleHistory, startAuction, bid, settleAuction, cancelAuction, getAuction, getTokenBalance,
       approveStone, approveTool, approveToken,
     }}>
       {children}

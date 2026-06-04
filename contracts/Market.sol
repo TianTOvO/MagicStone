@@ -20,6 +20,16 @@ contract Market is Ownable {
         bool active;
     }
 
+    struct Auction {
+        address seller;
+        uint256 startPrice;
+        uint256 minBidIncrement;
+        uint256 endTime;
+        address highestBidder;
+        uint256 highestBid;
+        bool active;
+    }
+
     IERC721 public stone;
     IERC721 public tool;
     IERC20 public token;
@@ -30,6 +40,7 @@ contract Market is Ownable {
     mapping(bytes32 => Listing) public listings;
     mapping(bytes32 => bool) public isStone;
     mapping(bytes32 => Offer) public offers;
+    mapping(bytes32 => Auction) public auctions;
     mapping(bytes32 => uint256[]) public saleHistory; // last 10 sale prices per NFT
 
     event Listed(address indexed seller, bool isStone, uint256 indexed tokenId, uint256 price);
@@ -38,6 +49,10 @@ contract Market is Ownable {
     event OfferMade(address indexed buyer, bool isStone, uint256 indexed tokenId, uint256 price);
     event OfferCancelled(address indexed buyer, bool isStone, uint256 indexed tokenId);
     event OfferAccepted(address indexed buyer, address indexed seller, bool isStone, uint256 indexed tokenId, uint256 price, uint256 fee);
+    event AuctionStarted(address indexed seller, bool isStone, uint256 indexed tokenId, uint256 startPrice, uint256 endTime);
+    event AuctionBid(address indexed bidder, bool isStone, uint256 indexed tokenId, uint256 bid);
+    event AuctionSettled(address indexed winner, address indexed seller, bool isStone, uint256 indexed tokenId, uint256 price, uint256 fee);
+    event AuctionCancelled(address indexed seller, bool isStone, uint256 indexed tokenId);
     event FeeUpdated(uint256 oldFee, uint256 newFee);
     event FeeReceiverUpdated(address oldReceiver, address newReceiver);
 
@@ -144,6 +159,102 @@ contract Market is Ownable {
         emit OfferAccepted(buyer, msg.sender, _isStone, tokenId, price, _calcFee(price));
     }
 
+    // ========== Auction (拍卖) ==========
+
+    function startAuction(bool _isStone, uint256 tokenId, uint256 _startPrice, uint256 _minBidIncrement, uint256 _duration) external {
+        IERC721 nft = _isStone ? stone : tool;
+        require(nft.ownerOf(tokenId) == msg.sender, "Not owner");
+        require(_startPrice > 0, "Invalid start price");
+        require(_duration >= 60 && _duration <= 30 days, "Invalid duration");
+
+        bytes32 key = _makeKey(_isStone, tokenId);
+        require(!auctions[key].active, "Auction exists");
+        require(!listings[key].active, "Already listed");
+
+        // Escrow NFT in contract
+        nft.transferFrom(msg.sender, address(this), tokenId);
+
+        auctions[key] = Auction({
+            seller: msg.sender,
+            startPrice: _startPrice,
+            minBidIncrement: _minBidIncrement,
+            endTime: block.timestamp + _duration,
+            highestBidder: address(0),
+            highestBid: 0,
+            active: true
+        });
+        isStone[key] = _isStone;
+
+        emit AuctionStarted(msg.sender, _isStone, tokenId, _startPrice, block.timestamp + _duration);
+    }
+
+    function bid(bool _isStone, uint256 tokenId, uint256 _bidAmount) external {
+        bytes32 key = _makeKey(_isStone, tokenId);
+        Auction storage auction = auctions[key];
+        require(auction.active, "Not active");
+        require(block.timestamp < auction.endTime, "Auction ended");
+
+        uint256 minBid = auction.highestBidder == address(0)
+            ? auction.startPrice
+            : auction.highestBid + auction.minBidIncrement;
+        require(_bidAmount >= minBid, "Bid too low");
+
+        // Refund previous highest bidder
+        if (auction.highestBidder != address(0)) {
+            require(token.transfer(auction.highestBidder, auction.highestBid), "Refund failed");
+        }
+
+        // Escrow new bid
+        require(token.transferFrom(msg.sender, address(this), _bidAmount), "Bid transfer failed");
+
+        auction.highestBidder = msg.sender;
+        auction.highestBid = _bidAmount;
+
+        emit AuctionBid(msg.sender, _isStone, tokenId, _bidAmount);
+    }
+
+    function settleAuction(bool _isStone, uint256 tokenId) external {
+        bytes32 key = _makeKey(_isStone, tokenId);
+        Auction storage auction = auctions[key];
+        require(auction.active, "Not active");
+        require(block.timestamp >= auction.endTime, "Not ended");
+
+        auction.active = false;
+
+        if (auction.highestBidder != address(0)) {
+            // Has bids: settle normally
+            _settleAuctionTrade(_isStone, tokenId, key, auction);
+            emit AuctionSettled(auction.highestBidder, auction.seller, _isStone, tokenId, auction.highestBid, _calcFee(auction.highestBid));
+        } else {
+            // No bids: return NFT to seller
+            IERC721 nft = _isStone ? stone : tool;
+            nft.transferFrom(address(this), auction.seller, tokenId);
+            emit AuctionCancelled(auction.seller, _isStone, tokenId);
+        }
+    }
+
+    function cancelAuction(bool _isStone, uint256 tokenId) external {
+        bytes32 key = _makeKey(_isStone, tokenId);
+        Auction storage auction = auctions[key];
+        require(auction.active, "Not active");
+        require(auction.seller == msg.sender, "Not seller");
+        require(auction.highestBidder == address(0), "Has bids");
+
+        auction.active = false;
+
+        IERC721 nft = _isStone ? stone : tool;
+        nft.transferFrom(address(this), auction.seller, tokenId);
+        emit AuctionCancelled(msg.sender, _isStone, tokenId);
+    }
+
+    function getAuction(bool _isStone, uint256 tokenId) external view returns (
+        address seller, uint256 startPrice, uint256 minBidIncrement,
+        uint256 endTime, address highestBidder, uint256 highestBid, bool active
+    ) {
+        Auction storage a = auctions[_makeKey(_isStone, tokenId)];
+        return (a.seller, a.startPrice, a.minBidIncrement, a.endTime, a.highestBidder, a.highestBid, a.active);
+    }
+
     // ========== Query ==========
 
     function getSaleHistory(bool _isStone, uint256 tokenId) external view returns (uint256[] memory) {
@@ -193,6 +304,32 @@ contract Market is Ownable {
         history.push(price);
         if (history.length > 10) {
             // shift left by 1
+            for (uint256 i = 0; i < 9; i++) {
+                history[i] = history[i + 1];
+            }
+            history.pop();
+        }
+    }
+
+    function _settleAuctionTrade(bool _isStone, uint256 tokenId, bytes32 key, Auction storage auction) private {
+        uint256 price = auction.highestBid;
+        uint256 fee = _calcFee(price);
+        uint256 sellerProceeds = price - fee;
+
+        // Pay seller from escrow
+        require(token.transfer(auction.seller, sellerProceeds), "Seller transfer failed");
+        if (fee > 0) {
+            require(token.transfer(feeReceiver, fee), "Fee transfer failed");
+        }
+
+        // Transfer NFT from contract to winner
+        IERC721 nft = _isStone ? stone : tool;
+        nft.transferFrom(address(this), auction.highestBidder, tokenId);
+
+        // Sale history
+        uint256[] storage history = saleHistory[key];
+        history.push(price);
+        if (history.length > 10) {
             for (uint256 i = 0; i < 9; i++) {
                 history[i] = history[i + 1];
             }
