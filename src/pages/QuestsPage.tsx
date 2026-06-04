@@ -196,22 +196,20 @@ export default function QuestsPage() {
                       </div>
 
                       {quest.isPuzzle ? (
-                        <motion.button
-                          whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+                        <button
                           onClick={() => { setCurrentPuzzle(quest); setPuzzleAnswer(''); setShowPuzzleModal(true); }}
                           disabled={isCompleted || isClaimed}
-                          className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                          className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all hover:scale-105 active:scale-95 ${
                             isCompleted || isClaimed ? 'bg-gray-700 text-gray-400 cursor-not-allowed' : 'bg-purple-600 text-white hover:bg-purple-500'
                           }`}
                         >
                           {isCompleted || isClaimed ? '已完成' : '解答谜题'}
-                        </motion.button>
+                        </button>
                       ) : (
-                        <motion.button
-                          whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+                        <button
                           onClick={() => claimReward(quest)}
                           disabled={!isCompleted || isClaimed || claimingQuestId === quest.id}
-                          className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                          className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all hover:scale-105 active:scale-95 ${
                             !isCompleted ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
                               : isClaimed ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
                               : 'bg-green-600 text-white hover:bg-green-500'
@@ -220,7 +218,7 @@ export default function QuestsPage() {
                           {claimingQuestId === quest.id ? (
                             <><i className="fas fa-spinner fa-spin mr-1"></i>处理中...</>
                           ) : !isCompleted ? '进行中' : isClaimed ? '已领取' : '领取奖励'}
-                        </motion.button>
+                        </button>
                       )}
                     </div>
                   </div>
@@ -278,19 +276,19 @@ export default function QuestsPage() {
             </div>
 
             <div className="flex gap-3">
-              <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+              <button
                 onClick={() => setShowPuzzleModal(false)}
-                className="flex-1 py-3 bg-gradient-to-r from-gray-300 to-gray-400 rounded-xl text-gray-800 font-bold hover:from-gray-400 hover:to-gray-500 transition-all shadow"
-              >取消</motion.button>
-              <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+                className="flex-1 py-3 bg-gradient-to-r from-gray-300 to-gray-400 rounded-xl text-gray-800 font-bold hover:from-gray-400 hover:to-gray-500 hover:scale-105 active:scale-95 transition-all shadow"
+              >取消</button>
+              <button
                 onClick={submitPuzzleAnswer}
                 disabled={puzzleAnswer.trim() === ''}
-                className={`flex-1 py-3 rounded-xl text-white font-bold transition-all shadow-lg ${
+                className={`flex-1 py-3 rounded-xl text-white font-bold hover:scale-105 active:scale-95 transition-all shadow-lg ${
                   puzzleAnswer.trim() !== ''
                     ? 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700'
                     : 'bg-gray-400 text-gray-600 cursor-not-allowed'
                 }`}
-              >提交答案</motion.button>
+              >提交答案</button>
             </div>
           </motion.div>
         </motion.div>

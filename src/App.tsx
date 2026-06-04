@@ -8,6 +8,7 @@ import QuestsPage from "@/pages/QuestsPage";
 import ToolCraftPage from "@/pages/ToolCraftPage";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import BackgroundEffect from "@/components/BackgroundEffect";
 import LoginPage from "@/pages/LoginPage";
 import { useState, useEffect } from "react";
 import { AuthContext } from '@/contexts/authContext';
@@ -47,7 +48,9 @@ export default function App() {
       >
         <UserDataContext.Provider value={{ userData, updateUserData }}>
           <WalletProvider>
-          <div className="min-h-screen bg-gradient-to-br from-white via-blue-50 to-purple-50 text-gray-900 flex flex-col">
+          <div className="min-h-screen bg-gradient-to-br from-white via-blue-50 to-purple-50 text-gray-900 flex flex-col relative">
+            <BackgroundEffect />
+            <div className="relative z-10 flex flex-col min-h-screen">
             <Navbar />
             <main className="flex-grow max-w-7xl mx-auto w-full px-4 py-8">
               <Routes>
@@ -61,6 +64,7 @@ export default function App() {
               </Routes>
             </main>
             <Footer />
+            </div>
           </div>
           </WalletProvider>
         </UserDataContext.Provider>

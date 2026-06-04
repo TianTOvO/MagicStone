@@ -140,8 +140,7 @@ export default function InventoryPage() {
               {userData.stones.map((stone) => (
                 <motion.div
                   key={stone.id}
-                  whileHover={{ scale: 1.08, y: -8 }}
-                  className={`rounded-2xl p-6 border-2 shadow-lg transition-all ${
+                  className={`rounded-2xl p-6 border-2 shadow-lg hover:scale-105 hover:-translate-y-2 hover:shadow-xl transition-all duration-150 ${
                     stone.isPolishable
                       ? 'bg-gradient-to-br from-blue-50 to-blue-100 border-blue-400 hover:border-blue-500'
                       : 'bg-gradient-to-br from-gray-50 to-gray-100 border-gray-300 opacity-60'
@@ -195,8 +194,7 @@ export default function InventoryPage() {
               {userData.tools.map((tool) => (
                 <motion.div
                   key={tool.id}
-                  whileHover={{ scale: 1.05, y: -5 }}
-                  className={`bg-gray-800/70 backdrop-blur-sm rounded-xl p-5 border shadow-lg ${
+                  className={`bg-gray-800/70 backdrop-blur-sm rounded-xl p-5 border shadow-lg hover:scale-105 hover:-translate-y-1.5 hover:shadow-xl transition-all duration-150 ${
                     tool.durability > 0
                       ? 'border-green-500/30 hover:border-green-400'
                       : 'border-red-500/30 opacity-70'

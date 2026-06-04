@@ -172,18 +172,16 @@ export default function ShopPage() {
           </div>
         </div>
 
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
+        <button
           onClick={() => {
             updateUserData({ coins: userData.coins + 1000 });
             toast.success('管理员：添加了1000游戏币');
           }}
-          className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg hover:shadow-purple-600/50 transition-all flex items-center gap-2"
+          className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg hover:shadow-purple-600/50 hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
         >
           <i className="fas fa-wand-magic-sparkles"></i>
           增加游戏币
-        </motion.button>
+        </button>
       </motion.div>
 
       <motion.div
@@ -196,8 +194,7 @@ export default function ShopPage() {
           <motion.div
             key={item.id}
             variants={itemVariants}
-            whileHover={{ scale: 1.05, y: -8 }}
-            className={`rounded-2xl overflow-hidden border-2 shadow-lg transition-all ${
+            className={`rounded-2xl overflow-hidden border-2 shadow-lg hover:scale-105 hover:-translate-y-2 hover:shadow-xl transition-all duration-150 ${
               item.isSpecial
                 ? 'bg-gradient-to-br from-purple-50 to-pink-50 border-purple-400'
                 : 'bg-gradient-to-br from-white to-blue-50 border-blue-300'
@@ -260,14 +257,12 @@ export default function ShopPage() {
                     <span className="font-bold text-yellow-700">{item.price}</span>
                   </div>
 
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
+                  <button
                     onClick={() => { setSelectedItem(item); setQuantity(1); setShowModal(true); }}
-                    className="px-4 py-1.5 bg-gradient-to-r from-pink-600 to-rose-600 rounded-lg text-white font-bold transition-all shadow-lg"
+                    className="px-4 py-1.5 bg-gradient-to-r from-pink-600 to-rose-600 rounded-lg text-white font-bold hover:scale-105 active:scale-95 transition-all shadow-lg"
                   >
                     购买
-                  </motion.button>
+                  </button>
                 </div>
               </div>
             </div>
@@ -319,26 +314,24 @@ export default function ShopPage() {
             <div className="mb-6">
               <p className="text-gray-800 font-semibold mb-2">数量</p>
               <div className="flex items-center">
-                <motion.button
-                  whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+                <button
                   onClick={() => setQuantity(prev => Math.max(1, prev - 1))}
-                  className="bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 transition-all text-white w-10 h-10 rounded-l-lg flex items-center justify-center font-bold shadow"
+                  className="bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 hover:scale-105 active:scale-95 transition-all text-white w-10 h-10 rounded-l-lg flex items-center justify-center font-bold shadow"
                 >
                   <i className="fas fa-minus"></i>
-                </motion.button>
+                </button>
                 <input
                   type="number" value={quantity}
                   onChange={(e) => { const num = parseInt(e.target.value, 10); setQuantity(isNaN(num) ? 1 : Math.max(1, num)); }}
                   className="bg-gradient-to-r from-pink-50 to-rose-50 border-t-2 border-b-2 border-pink-300 w-16 h-10 text-center text-gray-800 font-bold focus:outline-none focus:ring-2 focus:ring-pink-500"
                   min="1"
                 />
-                <motion.button
-                  whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+                <button
                   onClick={() => setQuantity(prev => prev + 1)}
-                  className="bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 transition-all text-white w-10 h-10 rounded-r-lg flex items-center justify-center font-bold shadow"
+                  className="bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 hover:scale-105 active:scale-95 transition-all text-white w-10 h-10 rounded-r-lg flex items-center justify-center font-bold shadow"
                 >
                   <i className="fas fa-plus"></i>
-                </motion.button>
+                </button>
               </div>
             </div>
 
@@ -378,18 +371,17 @@ export default function ShopPage() {
               <button onClick={() => setShowModal(false)} className="flex-1 py-3 bg-gray-700 rounded-xl text-white font-medium hover:bg-gray-600 transition-colors">
                 取消
               </button>
-              <motion.button
-                whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+              <button
                 onClick={buyItem}
                 disabled={userData.coins < selectedItem.price * quantity || isBuying}
-                className={`flex-1 py-3 rounded-xl text-white font-medium transition-all ${
+                className={`flex-1 py-3 rounded-xl text-white font-medium hover:scale-105 active:scale-95 transition-all ${
                   userData.coins >= selectedItem.price * quantity && !isBuying
                     ? 'bg-gradient-to-r from-blue-600 to-purple-600'
                     : 'bg-gray-700 text-gray-400 cursor-not-allowed'
                 }`}
               >
                 确认购买
-              </motion.button>
+              </button>
             </div>
           </motion.div>
         </motion.div>

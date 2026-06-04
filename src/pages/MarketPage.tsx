@@ -586,13 +586,13 @@ export default function MarketPage() {
           </div>
           <div className="flex gap-3">
             <button onClick={() => { setOfferTarget({ isStone: true, tokenId: 0 }); setShowOfferModal(true); }}
-              className="px-4 py-2 rounded-lg bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold shadow hover:scale-105 transition-transform"
+              className="px-4 py-2 rounded-lg bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold shadow hover:scale-105 transition-all duration-150"
             >发起出价</button>
             <button onClick={() => {
               if (!connected) { toast.error('请先连接钱包'); connectWallet(); return; }
               setShowSellModal(true);
             }}
-              className="px-4 py-2 rounded-lg bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-bold shadow hover:scale-105 transition-transform"
+              className="px-4 py-2 rounded-lg bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-bold shadow hover:scale-105 transition-all duration-150"
             >上架 NFT</button>
           </div>
         </div>
@@ -623,8 +623,7 @@ export default function MarketPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
               {filteredItems.map((item) => (
                 <motion.div key={`${item.isStone}-${item.tokenId}`}
-                  whileHover={{ scale: 1.05, y: -6 }}
-                  className="rounded-2xl overflow-hidden border-2 shadow-lg transition-all bg-gradient-to-br from-white to-blue-50 border-blue-300 hover:border-blue-500"
+                  className="rounded-2xl overflow-hidden border-2 shadow-lg bg-gradient-to-br from-white to-blue-50 border-blue-300 hover:border-blue-500 hover:scale-105 hover:-translate-y-1.5 transition-all duration-150"
                 >
                   <div className={`relative h-40 flex items-center justify-center ${
                     item.isStone
@@ -662,23 +661,23 @@ export default function MarketPage() {
                     </div>
 
                     {activeTab === 'myListings' ? (
-                      <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+                      <button
                         onClick={() => handleDelist(item.isStone, item.tokenId)}
-                        className="w-full py-2 bg-gradient-to-r from-red-500 to-rose-500 rounded-lg text-white font-medium"
-                      >下架</motion.button>
+                        className="w-full py-2 bg-gradient-to-r from-red-500 to-rose-500 rounded-lg text-white font-medium hover:scale-105 active:scale-[0.98] transition-all duration-150 duration-150"
+                      >下架</button>
                     ) : (
-                      <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+                      <button
                         onClick={() => {
                           if (!connected) { toast.error('请先连接钱包'); connectWallet(); return; }
                           setSelectedListing(item); setShowBuyModal(true);
                         }}
                         disabled={item.seller.toLowerCase() === myAddr?.toLowerCase()}
-                        className={`w-full py-2 rounded-lg text-white font-medium transition-all ${
+                        className={`w-full py-2 rounded-lg text-white font-medium hover:scale-105 active:scale-[0.98] transition-all duration-150 duration-150 ${
                           item.seller.toLowerCase() === myAddr?.toLowerCase()
                             ? 'bg-gray-400 cursor-not-allowed'
                             : 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg'
                         }`}
-                      >{item.seller.toLowerCase() === myAddr?.toLowerCase() ? '自己的挂单' : '立即购买'}</motion.button>
+                      >{item.seller.toLowerCase() === myAddr?.toLowerCase() ? '自己的挂单' : '立即购买'}</button>
                     )}
                   </div>
                 </motion.div>
@@ -740,7 +739,7 @@ export default function MarketPage() {
                         </span>
                         <button onClick={() => handleAcceptOffer(o.isStone, o.tokenId, o.buyer)}
                           disabled={accepting === key}
-                          className="px-5 py-2 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-lg font-bold hover:scale-105 transition-transform disabled:opacity-50 shadow"
+                          className="px-5 py-2 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-lg font-bold hover:scale-105 transition-all duration-150 disabled:opacity-50 shadow"
                         >{accepting === key ? '处理中...' : '接受出价'}</button>
                       </div>
                     </div>
@@ -777,7 +776,7 @@ export default function MarketPage() {
                           </span>
                           <button onClick={() => handleCancelOffer(o.isStone, o.tokenId)}
                             disabled={cancelling === key}
-                            className="px-5 py-2 bg-gradient-to-r from-red-500 to-rose-500 text-white rounded-lg font-bold hover:scale-105 transition-transform disabled:opacity-50 shadow"
+                            className="px-5 py-2 bg-gradient-to-r from-red-500 to-rose-500 text-white rounded-lg font-bold hover:scale-105 transition-all duration-150 disabled:opacity-50 shadow"
                           >{cancelling === key ? '撤回中...' : '撤退出价'}</button>
                         </div>
                       </div>
@@ -824,7 +823,7 @@ export default function MarketPage() {
                 if (!connected) { toast.error('请先连接钱包'); connectWallet(); return; }
                 setShowAuctionModal(true);
               }}
-                className="px-4 py-2 rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold shadow hover:scale-105 transition-transform"
+                className="px-4 py-2 rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold shadow hover:scale-105 transition-all duration-150"
               >发起拍卖</button>
             </div>
           </div>
@@ -841,8 +840,8 @@ export default function MarketPage() {
                   const minNextBid = a.highestBidder === '0x0000000000000000000000000000000000000000'
                     ? a.startPrice : a.highestBid + a.minBidIncrement;
                   return (
-                    <motion.div key={key} whileHover={{ scale: 1.03 }}
-                      className="rounded-2xl overflow-hidden border-2 shadow-lg bg-gradient-to-br from-white to-purple-50 border-purple-300"
+                    <motion.div key={key}
+                      className="rounded-2xl overflow-hidden border-2 shadow-lg bg-gradient-to-br from-white to-purple-50 border-purple-300 hover:scale-105 transition-all duration-150 duration-150"
                     >
                       <div className="bg-gradient-to-br from-purple-100 to-pink-100 h-32 flex items-center justify-center">
                         <i className={`fas ${a.isStone ? 'fa-gem text-blue-500' : 'fa-wrench text-green-500'} text-6xl`}></i>
@@ -868,7 +867,7 @@ export default function MarketPage() {
                             if (!connected) { toast.error('请先连接钱包'); connectWallet(); return; }
                             setBidTarget(a); setBidAmount(String(minNextBid)); setShowBidModal(true);
                           }}
-                            className="w-full py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg font-medium text-sm hover:scale-105 transition-transform"
+                            className="w-full py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg font-medium text-sm hover:scale-105 transition-all duration-150"
                           >出价</button>
                         )}
                       </div>
@@ -905,7 +904,7 @@ export default function MarketPage() {
                           </div>
                         </div>
                         <button onClick={() => handleSettleAuction(a.isStone, a.tokenId)}
-                          className="px-5 py-2 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-lg font-bold hover:scale-105 transition-transform shadow"
+                          className="px-5 py-2 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-lg font-bold hover:scale-105 transition-all duration-150 shadow"
                         >结算</button>
                       </div>
                     );

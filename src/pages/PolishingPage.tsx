@@ -122,10 +122,8 @@ export default function PolishingPage() {
                 <motion.div
                   key={stone.id}
                   variants={itemVariants}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
                   onClick={() => setSelectedStone(stone.id)}
-                  className={`rounded-xl p-4 cursor-pointer border-2 transition-all ${
+                  className={`rounded-xl p-4 cursor-pointer border-2 hover:scale-105 active:scale-95 transition-all duration-150 ${
                     selectedStone === stone.id
                       ? 'bg-gradient-to-br from-blue-400 to-cyan-400 border-blue-600 shadow-lg shadow-blue-500/50 scale-105'
                       : 'bg-gradient-to-br from-blue-50 to-blue-100 border-blue-300 hover:border-blue-500'
@@ -219,12 +217,10 @@ export default function PolishingPage() {
               </div>
             </div>
 
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+            <button
               onClick={handlePolish}
               disabled={!selectedStone || !selectedTool || isPolishing || !connected}
-              className={`w-full py-4 rounded-xl font-bold text-lg transition-all ${
+              className={`w-full py-4 rounded-xl font-bold text-lg hover:scale-105 active:scale-[0.98] transition-all ${
                 (!selectedStone || !selectedTool || isPolishing)
                   ? 'bg-gradient-to-r from-gray-300 to-gray-400 text-gray-600 cursor-not-allowed shadow-md'
                   : 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-600/50 hover:shadow-purple-600/70 hover:from-purple-700 hover:to-pink-700'
@@ -250,7 +246,7 @@ export default function PolishingPage() {
                   <i className="fas fa-wrench mr-2"></i> 开始打磨
                 </div>
               )}
-            </motion.button>
+            </button>
 
             {isPolishing && (
               <div className="space-y-2">
@@ -298,10 +294,8 @@ export default function PolishingPage() {
                 <motion.div
                   key={tool.id}
                   variants={itemVariants}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
                   onClick={() => setSelectedTool(tool.id)}
-                  className={`rounded-xl p-4 cursor-pointer border-2 transition-all ${
+                  className={`rounded-xl p-4 cursor-pointer border-2 hover:scale-105 active:scale-95 transition-all duration-150 ${
                     selectedTool === tool.id
                       ? 'bg-gradient-to-br from-green-400 to-emerald-400 border-green-600 shadow-lg shadow-green-500/50 scale-105'
                       : 'bg-gradient-to-br from-green-50 to-emerald-100 border-green-300 hover:border-green-500'

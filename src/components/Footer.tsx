@@ -21,38 +21,30 @@ export default function Footer() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
           >
-            <motion.a 
-              href="#" 
-              className="text-gray-600 hover:text-blue-600 transition-colors text-xl font-bold"
-              whileHover={{ scale: 1.2, rotate: 15 }}
-              whileTap={{ scale: 0.9 }}
+            <a
+              href="#"
+              className="text-gray-600 hover:text-blue-600 transition-colors text-xl font-bold hover:scale-125 hover:rotate-[15deg] active:scale-90 transition-transform duration-150"
             >
               <i className="fab fa-twitter"></i>
-            </motion.a>
-            <motion.a 
-              href="#" 
-              className="text-gray-600 hover:text-purple-600 transition-colors text-xl font-bold"
-              whileHover={{ scale: 1.2, rotate: 15 }}
-              whileTap={{ scale: 0.9 }}
+            </a>
+            <a
+              href="#"
+              className="text-gray-600 hover:text-purple-600 transition-colors text-xl font-bold hover:scale-125 hover:rotate-[15deg] active:scale-90 transition-transform duration-150"
             >
               <i className="fab fa-discord"></i>
-            </motion.a>
-            <motion.a 
-              href="#" 
-              className="text-gray-600 hover:text-cyan-600 transition-colors text-xl font-bold"
-              whileHover={{ scale: 1.2, rotate: 15 }}
-              whileTap={{ scale: 0.9 }}
+            </a>
+            <a
+              href="#"
+              className="text-gray-600 hover:text-cyan-600 transition-colors text-xl font-bold hover:scale-125 hover:rotate-[15deg] active:scale-90 transition-transform duration-150"
             >
               <i className="fab fa-telegram"></i>
-            </motion.a>
-            <motion.a 
-              href="#" 
-              className="text-gray-600 hover:text-gray-900 transition-colors text-xl font-bold"
-              whileHover={{ scale: 1.2, rotate: 15 }}
-              whileTap={{ scale: 0.9 }}
+            </a>
+            <a
+              href="#"
+              className="text-gray-600 hover:text-gray-900 transition-colors text-xl font-bold hover:scale-125 hover:rotate-[15deg] active:scale-90 transition-transform duration-150"
             >
               <i className="fab fa-github"></i>
-            </motion.a>
+            </a>
           </motion.div>
         </div>
       </div>

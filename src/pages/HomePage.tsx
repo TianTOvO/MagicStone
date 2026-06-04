@@ -25,6 +25,9 @@ export default function HomePage() {
       : '无',
   };
 
+  const cardHover = 'hover:scale-105 hover:shadow-2xl transition-all duration-150';
+  const featureHover = 'hover:-translate-y-2 hover:shadow-2xl transition-all duration-150';
+
   return (
     <div className="space-y-8">
       <motion.div
@@ -51,15 +54,13 @@ export default function HomePage() {
                 <p className="text-xs text-green-600 font-mono">{account.slice(0, 6)}...{account.slice(-4)}</p>
               </motion.div>
             ) : (
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+              <button
                 onClick={connectWallet}
-                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl px-5 py-3 text-sm font-bold transition-all shadow-lg"
+                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl px-5 py-3 text-sm font-bold transition-all duration-150 shadow-lg hover:scale-105 active:scale-95"
               >
                 <i className="fas fa-plug mr-2"></i>
                 连接区块链
-              </motion.button>
+              </button>
             )}
           </div>
         </div>
@@ -69,9 +70,8 @@ export default function HomePage() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0 }}
-          whileHover={{ scale: 1.05, boxShadow: '0 20px 25px -5px rgba(59, 130, 246, 0.3)' }}
-          className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-6 border-2 border-blue-300 shadow-lg"
+          transition={{ delay: 0, type: "tween", duration: 0.15 }}
+          className={`bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-6 border-2 border-blue-300 shadow-lg ${cardHover}`}
         >
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-gray-700 text-sm font-bold">我的原石</h3>
@@ -88,9 +88,8 @@ export default function HomePage() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          whileHover={{ scale: 1.05, boxShadow: '0 20px 25px -5px rgba(34, 197, 94, 0.3)' }}
-          className="bg-gradient-to-br from-green-50 to-emerald-100 rounded-2xl p-6 border-2 border-green-300 shadow-lg"
+          transition={{ delay: 0.1, type: "tween", duration: 0.15 }}
+          className={`bg-gradient-to-br from-green-50 to-emerald-100 rounded-2xl p-6 border-2 border-green-300 shadow-lg ${cardHover}`}
         >
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-gray-700 text-sm font-bold">打磨工具</h3>
@@ -107,9 +106,8 @@ export default function HomePage() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          whileHover={{ scale: 1.05, boxShadow: '0 20px 25px -5px rgba(234, 179, 8, 0.3)' }}
-          className="bg-gradient-to-br from-yellow-50 to-amber-100 rounded-2xl p-6 border-2 border-yellow-300 shadow-lg"
+          transition={{ delay: 0.2, type: "tween", duration: 0.15 }}
+          className={`bg-gradient-to-br from-yellow-50 to-amber-100 rounded-2xl p-6 border-2 border-yellow-300 shadow-lg ${cardHover}`}
         >
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-gray-700 text-sm font-bold">游戏币</h3>
@@ -126,9 +124,8 @@ export default function HomePage() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          whileHover={{ scale: 1.05, boxShadow: '0 20px 25px -5px rgba(168, 85, 247, 0.3)' }}
-          className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl p-6 border-2 border-purple-300 shadow-lg"
+          transition={{ delay: 0.3, type: "tween", duration: 0.15 }}
+          className={`bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl p-6 border-2 border-purple-300 shadow-lg ${cardHover}`}
         >
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-gray-700 text-sm font-bold">任务进度</h3>
@@ -147,11 +144,10 @@ export default function HomePage() {
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.4 }}
-          whileHover={{ y: -8, boxShadow: '0 25px 50px -12px rgba(59, 130, 246, 0.3)' }}
-          className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-2xl p-6 border-2 border-blue-300 cursor-pointer shadow-lg"
+          transition={{ delay: 0.4, type: "tween", duration: 0.15 }}
+          className={`bg-gradient-to-br from-blue-50 to-cyan-50 rounded-2xl p-6 border-2 border-blue-300 cursor-pointer shadow-lg ${featureHover}`}
         >
-          <Link to="/polishing" className="h-full flex flex-col justify-between">
+          <Link to="/polishing" className="h-full flex flex-col justify-between group">
             <div>
               <motion.i
                 className="fas fa-wrench text-5xl text-blue-600 mb-4"
@@ -161,23 +157,19 @@ export default function HomePage() {
               <h3 className="text-2xl font-black text-gray-800 mb-2">开始打磨</h3>
               <p className="text-gray-700 text-base font-medium">打磨你的原石，提升它们的等级和价值</p>
             </div>
-            <motion.div
-              className="mt-4 text-blue-600 text-base font-bold flex items-center"
-              whileHover={{ x: 5 }}
-            >
+            <div className="mt-4 text-blue-600 text-base font-bold flex items-center group-hover:translate-x-1.5 transition-transform duration-150">
               前往打磨站 <i className="fas fa-arrow-right ml-2"></i>
-            </motion.div>
+            </div>
           </Link>
         </motion.div>
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-          whileHover={{ y: -8, boxShadow: '0 25px 50px -12px rgba(168, 85, 247, 0.3)' }}
-          className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-6 border-2 border-purple-300 cursor-pointer shadow-lg"
+          transition={{ delay: 0.5, type: "tween", duration: 0.15 }}
+          className={`bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-6 border-2 border-purple-300 cursor-pointer shadow-lg ${featureHover}`}
         >
-          <Link to="/shop" className="h-full flex flex-col justify-between">
+          <Link to="/shop" className="h-full flex flex-col justify-between group">
             <div>
               <motion.i
                 className="fas fa-store text-5xl text-purple-600 mb-4"
@@ -187,23 +179,19 @@ export default function HomePage() {
               <h3 className="text-2xl font-black text-gray-800 mb-2">商城购物</h3>
               <p className="text-gray-700 text-base font-medium">购买更多原石和工具，扩展你的收藏</p>
             </div>
-            <motion.div
-              className="mt-4 text-purple-600 text-base font-bold flex items-center"
-              whileHover={{ x: 5 }}
-            >
+            <div className="mt-4 text-purple-600 text-base font-bold flex items-center group-hover:translate-x-1.5 transition-transform duration-150">
               前往商城 <i className="fas fa-arrow-right ml-2"></i>
-            </motion.div>
+            </div>
           </Link>
         </motion.div>
 
         <motion.div
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.6 }}
-          whileHover={{ y: -8, boxShadow: '0 25px 50px -12px rgba(34, 197, 94, 0.3)' }}
-          className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-6 border-2 border-green-300 cursor-pointer shadow-lg"
+          transition={{ delay: 0.6, type: "tween", duration: 0.15 }}
+          className={`bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-6 border-2 border-green-300 cursor-pointer shadow-lg ${featureHover}`}
         >
-          <Link to="/quests" className="h-full flex flex-col justify-between">
+          <Link to="/quests" className="h-full flex flex-col justify-between group">
             <div>
               <motion.i
                 className="fas fa-clipboard-list text-5xl text-green-600 mb-4"
@@ -213,12 +201,9 @@ export default function HomePage() {
               <h3 className="text-2xl font-black text-gray-800 mb-2">完成任务</h3>
               <p className="text-gray-700 text-base font-medium">完成任务获取奖励，加速你的游戏进程</p>
             </div>
-            <motion.div
-              className="mt-4 text-green-600 text-base font-bold flex items-center"
-              whileHover={{ x: 5 }}
-            >
+            <div className="mt-4 text-green-600 text-base font-bold flex items-center group-hover:translate-x-1.5 transition-transform duration-150">
               查看任务 <i className="fas fa-arrow-right ml-2"></i>
-            </motion.div>
+            </div>
           </Link>
         </motion.div>
       </div>
@@ -237,8 +222,7 @@ export default function HomePage() {
               key={stone.id}
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
-              whileHover={{ scale: 1.08, rotate: 3 }}
-              className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-5 border-2 border-blue-300 shadow-md"
+              className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-5 border-2 border-blue-300 shadow-md hover:scale-105 hover:rotate-3 hover:shadow-xl transition-all duration-150"
             >
               <div className="relative h-28 flex items-center justify-center mb-4">
                 <motion.div
@@ -258,8 +242,7 @@ export default function HomePage() {
               key={tool.id}
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
-              whileHover={{ scale: 1.08, rotate: -3 }}
-              className="bg-gradient-to-br from-green-50 to-emerald-100 rounded-2xl p-5 border-2 border-green-300 shadow-md"
+              className="bg-gradient-to-br from-green-50 to-emerald-100 rounded-2xl p-5 border-2 border-green-300 shadow-md hover:scale-105 hover:-rotate-3 hover:shadow-xl transition-all duration-150"
             >
               <div className="relative h-28 flex items-center justify-center mb-4">
                 <motion.div

@@ -143,10 +143,8 @@ export default function ToolCraftPage() {
             const isDisabled = count < 3 || nextLevel === null;
 
             return (
-              <motion.button
+              <button
                 key={level}
-                whileHover={!isDisabled ? { scale: 1.05 } : {}}
-                whileTap={!isDisabled ? { scale: 0.95 } : {}}
                 onClick={() => !isDisabled && setSelectedLevel(level)}
                 disabled={isDisabled}
                 className={`relative p-4 rounded-xl border-2 transition-all ${
@@ -154,7 +152,7 @@ export default function ToolCraftPage() {
                     ? `${TOOL_LEVEL_COLORS[level]} text-white shadow-lg scale-105`
                     : isDisabled
                     ? 'bg-gray-100 border-gray-300 opacity-50 cursor-not-allowed text-gray-500'
-                    : 'bg-gray-100 border-gray-300 hover:border-gray-400 text-gray-800'
+                    : 'bg-gray-100 border-gray-300 hover:border-gray-400 text-gray-800 hover:scale-105 active:scale-95'
                 }`}
               >
                 <div className="font-bold text-lg mb-1">{TOOL_LEVEL_NAMES[level]}工具</div>
@@ -164,7 +162,7 @@ export default function ToolCraftPage() {
                     {count < 3 ? '数量不足' : '最高等级'}
                   </div>
                 )}
-              </motion.button>
+              </button>
             );
           })}
         </div>
@@ -208,12 +206,10 @@ export default function ToolCraftPage() {
           </motion.div>
         )}
 
-        <motion.button
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
+        <button
           onClick={handleCraft}
           disabled={isCrafting || getToolCountByLevel(selectedLevel) < 3 || getNextLevel(selectedLevel) === null}
-          className={`w-full py-4 rounded-xl font-bold text-lg transition-all ${
+          className={`w-full py-4 rounded-xl font-bold text-lg hover:scale-105 active:scale-95 transition-all ${
             isCrafting || getToolCountByLevel(selectedLevel) < 3 || getNextLevel(selectedLevel) === null
               ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
               : 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white shadow-lg shadow-blue-600/50 hover:shadow-blue-600/70 hover:from-blue-700 hover:to-cyan-700'
@@ -232,7 +228,7 @@ export default function ToolCraftPage() {
               开始合成
             </div>
           )}
-        </motion.button>
+        </button>
       </motion.div>
 
       <motion.div
