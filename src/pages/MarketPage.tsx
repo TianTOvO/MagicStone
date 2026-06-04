@@ -2,14 +2,14 @@ import { useContext, useState, useEffect, useCallback } from 'react';
 import { UserDataContext } from '@/contexts/userDataContext';
 import { useContracts } from '@/hooks/useContracts';
 import { STONE_GRADE_NAMES, TOOL_LEVEL_NAMES } from '@/types';
-import type { MarketListing } from '@/types';
+import type { MarketListing, MarketOffer } from '@/types';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 import { ethers, type EventLog } from 'ethers';
 
 export default function MarketPage() {
   const { userData } = useContext(UserDataContext);
-  const { connected, connectWallet, contracts, account, buyItem, listItem, delistItem, makeOffer } = useContracts();
+  const { connected, connectWallet, contracts, account, buyItem, listItem, delistItem, makeOffer, cancelOffer, acceptOffer } = useContracts();
   const [activeTab, setActiveTab] = useState<'all' | 'stones' | 'tools' | 'myListings' | 'offers'>('all');
   const [listings, setListings] = useState<MarketListing[]>([]);
   const [loading, setLoading] = useState(true);
@@ -30,6 +30,12 @@ export default function MarketPage() {
   const [offerTarget, setOfferTarget] = useState<{ isStone: boolean; tokenId: number } | null>(null);
   const [offerPrice, setOfferPrice] = useState('');
   const [offering, setOffering] = useState(false);
+
+  // Offers state
+  const [offers, setOffers] = useState<MarketOffer[]>([]);
+  const [offerSubTab, setOfferSubTab] = useState<'incoming' | 'outgoing'>('incoming');
+  const [accepting, setAccepting] = useState<string>(''); // key of offer being accepted
+  const [cancelling, setCancelling] = useState<string>(''); // key of offer being cancelled
 
   const loadListings = useCallback(async () => {
     if (!contracts.market) { setLoading(false); return; }
@@ -83,9 +89,54 @@ export default function MarketPage() {
     }
   }, [contracts.market]);
 
+  const loadOffers = useCallback(async () => {
+    if (!contracts.market || !account) return;
+    try {
+      const madeFilter = contracts.market.filters.OfferMade();
+      const madeEvents = await contracts.market.queryFilter(madeFilter, -5000);
+      const cancelledFilter = contracts.market.filters.OfferCancelled();
+      const cancelledEvents = await contracts.market.queryFilter(cancelledFilter, -5000);
+      const acceptedFilter = contracts.market.filters.OfferAccepted();
+      const acceptedEvents = await contracts.market.queryFilter(acceptedFilter, -5000);
+
+      const deactivated = new Set<string>();
+      for (const evt of cancelledEvents) {
+        const args = (evt as EventLog).args;
+        deactivated.add(`${args.buyer}-${args.isStone}-${args.tokenId}`);
+      }
+      for (const evt of acceptedEvents) {
+        const args = (evt as EventLog).args;
+        deactivated.add(`${args.buyer}-${args.isStone}-${args.tokenId}`);
+      }
+
+      const parsed: MarketOffer[] = [];
+      const seen = new Set<string>();
+      for (const evt of madeEvents.reverse()) {
+        const args = (evt as EventLog).args;
+        const key = `${args.buyer}-${args.isStone}-${args.tokenId}`;
+        if (seen.has(key) || deactivated.has(key)) continue;
+        seen.add(key);
+
+        const offerData = await contracts.market.getOffer(args.isStone, args.tokenId);
+        if (!offerData.active) continue;
+
+        parsed.push({
+          isStone: Boolean(args.isStone),
+          tokenId: Number(args.tokenId),
+          buyer: offerData.buyer,
+          price: Number(ethers.formatEther(offerData.price)),
+          active: true,
+        });
+      }
+      setOffers(parsed);
+    } catch (err) {
+      console.error('Failed to load offers:', err);
+    }
+  }, [contracts.market, account]);
+
   useEffect(() => {
-    if (connected) loadListings();
-  }, [connected, loadListings]);
+    if (connected) { loadListings(); loadOffers(); }
+  }, [connected, loadListings, loadOffers]);
 
   // Listen for new events
   useEffect(() => {
@@ -121,11 +172,33 @@ export default function MarketPage() {
     market.on('Listed', onListed);
     market.on('Delisted', onDelistedOrSold);
     market.on('Sold', onDelistedOrSold);
+    market.on('OfferMade', (buyer: string, isStone: boolean, tokenId: bigint, price: bigint) => {
+      setOffers(prev => {
+        const exists = prev.find(o => o.buyer === buyer && o.isStone === isStone && o.tokenId === Number(tokenId));
+        if (exists) return prev;
+        return [...prev, {
+          isStone: Boolean(isStone),
+          tokenId: Number(tokenId),
+          buyer,
+          price: Number(ethers.formatEther(price)),
+          active: true,
+        }];
+      });
+    });
+    market.on('OfferCancelled', (buyer: string, isStone: boolean, tokenId: bigint) => {
+      setOffers(prev => prev.filter(o => !(o.buyer === buyer && o.isStone === isStone && o.tokenId === Number(tokenId))));
+    });
+    market.on('OfferAccepted', (...args: any[]) => {
+      setOffers(prev => prev.filter(o => !(o.buyer === args[0] && o.isStone === args[1] && o.tokenId === Number(args[2]))));
+    });
 
     return () => {
       market.off('Listed', onListed);
       market.off('Delisted', onDelistedOrSold);
       market.off('Sold', onDelistedOrSold);
+      market.off('OfferMade', () => {});
+      market.off('OfferCancelled', () => {});
+      market.off('OfferAccepted', () => {});
     };
   }, [contracts.market]);
 
@@ -199,6 +272,36 @@ export default function MarketPage() {
     }
   };
 
+  const handleAcceptOffer = async (isStone: boolean, tokenId: number, buyer: string) => {
+    const key = `${buyer}-${isStone}-${tokenId}`;
+    try {
+      setAccepting(key);
+      await acceptOffer(isStone, tokenId, buyer);
+      setOffers(prev => prev.filter(o => !(o.buyer === buyer && o.isStone === isStone && o.tokenId === tokenId)));
+      toast.success('已接受出价，交易完成');
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : '接受失败';
+      toast.error(msg);
+    } finally {
+      setAccepting('');
+    }
+  };
+
+  const handleCancelOffer = async (isStone: boolean, tokenId: number) => {
+    const key = `cancel-${isStone}-${tokenId}`;
+    try {
+      setCancelling(key);
+      await cancelOffer(isStone, tokenId);
+      setOffers(prev => prev.filter(o => !(o.isStone === isStone && o.tokenId === tokenId)));
+      toast.success('出价已撤回');
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : '撤回失败';
+      toast.error(msg);
+    } finally {
+      setCancelling('');
+    }
+  };
+
   return (
     <div className="space-y-6">
       <motion.div
@@ -218,6 +321,7 @@ export default function MarketPage() {
               { key: 'stones', label: '原石' },
               { key: 'tools', label: '工具' },
               { key: 'myListings', label: '我的挂单' },
+              { key: 'offers', label: '出价管理' },
             ] as const).map(tab => (
               <button key={tab.key}
                 onClick={() => setActiveTab(tab.key)}
@@ -335,6 +439,108 @@ export default function MarketPage() {
               <h3 className="text-xl font-bold text-gray-700 mb-1">暂无挂单</h3>
               <p className="text-gray-500">成为第一个上架 NFT 的人吧</p>
             </div>
+          )}
+        </div>
+      )}
+
+      {/* Offers Tab */}
+      {!loading && activeTab === 'offers' && (
+        <div>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-2xl font-black text-gray-800 flex items-center">
+              <i className="fas fa-hand-holding-usd text-amber-600 mr-2"></i>
+              出价管理
+            </h2>
+            <div className="bg-amber-100 rounded-xl p-1 inline-flex border-2 border-amber-300">
+              {([
+                { key: 'incoming' as const, label: '收到的出价' },
+                { key: 'outgoing' as const, label: '我的出价' },
+              ]).map(tab => (
+                <button key={tab.key}
+                  onClick={() => setOfferSubTab(tab.key)}
+                  className={`px-4 py-1.5 rounded-lg text-sm font-bold transition-all ${
+                    offerSubTab === tab.key
+                      ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow'
+                      : 'text-gray-700 hover:text-amber-600'
+                  }`}
+                >{tab.label}</button>
+              ))}
+            </div>
+          </div>
+
+          {offerSubTab === 'incoming' ? (
+            // Incoming offers (all active offers — user can accept if they own the NFT)
+            offers.length > 0 ? (
+              <div className="space-y-3">
+                {offers.map(o => {
+                  const key = `${o.buyer}-${o.isStone}-${o.tokenId}`;
+                  return (
+                    <div key={key} className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl p-5 border-2 border-amber-200 flex items-center justify-between shadow">
+                      <div className="flex items-center gap-4">
+                        <i className={`fas ${o.isStone ? 'fa-gem text-blue-500' : 'fa-wrench text-green-500'} text-2xl`}></i>
+                        <div>
+                          <h4 className="font-bold text-gray-800">{o.isStone ? '原石' : '工具'} #{o.tokenId}</h4>
+                          <p className="text-sm text-gray-600">买家: {o.buyer.slice(0, 6)}...{o.buyer.slice(-4)}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <span className="font-bold text-amber-700 text-lg">
+                          <i className="fas fa-coins text-amber-500 mr-1"></i>{o.price} MSTK
+                        </span>
+                        <button onClick={() => handleAcceptOffer(o.isStone, o.tokenId, o.buyer)}
+                          disabled={accepting === key}
+                          className="px-5 py-2 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-lg font-bold hover:scale-105 transition-transform disabled:opacity-50 shadow"
+                        >{accepting === key ? '处理中...' : '接受出价'}</button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-12 border-2 border-amber-200 flex flex-col items-center justify-center min-h-[200px] shadow">
+                <i className="fas fa-inbox text-4xl text-amber-300 mb-3"></i>
+                <h3 className="text-lg font-bold text-gray-700 mb-1">暂无收到出价</h3>
+                <p className="text-gray-500 text-sm">当有人对你的 NFT 出价时，这里会显示</p>
+              </div>
+            )
+          ) : (
+            // Outgoing offers (my offers)
+            (() => {
+              const myOffers = offers.filter(o => o.buyer.toLowerCase() === account?.toLowerCase());
+              return myOffers.length > 0 ? (
+                <div className="space-y-3">
+                  {myOffers.map(o => {
+                    const key = `cancel-${o.isStone}-${o.tokenId}`;
+                    return (
+                      <div key={key} className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-5 border-2 border-blue-200 flex items-center justify-between shadow">
+                        <div className="flex items-center gap-4">
+                          <i className={`fas ${o.isStone ? 'fa-gem text-blue-500' : 'fa-wrench text-green-500'} text-2xl`}></i>
+                          <div>
+                            <h4 className="font-bold text-gray-800">{o.isStone ? '原石' : '工具'} #{o.tokenId}</h4>
+                            <p className="text-sm text-gray-500">等待卖家接受</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <span className="font-bold text-blue-700 text-lg">
+                            <i className="fas fa-coins text-blue-500 mr-1"></i>{o.price} MSTK
+                          </span>
+                          <button onClick={() => handleCancelOffer(o.isStone, o.tokenId)}
+                            disabled={cancelling === key}
+                            className="px-5 py-2 bg-gradient-to-r from-red-500 to-rose-500 text-white rounded-lg font-bold hover:scale-105 transition-transform disabled:opacity-50 shadow"
+                          >{cancelling === key ? '撤回中...' : '撤退出价'}</button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-2xl p-12 border-2 border-blue-200 flex flex-col items-center justify-center min-h-[200px] shadow">
+                  <i className="fas fa-paper-plane text-4xl text-blue-300 mb-3"></i>
+                  <h3 className="text-lg font-bold text-gray-700 mb-1">暂无进行中的出价</h3>
+                  <p className="text-gray-500 text-sm">使用「发起出价」按钮对任意 NFT 出价</p>
+                </div>
+              );
+            })()
           )}
         </div>
       )}
