@@ -43,10 +43,22 @@ export const POLISHING_ABI = [
 
 export const MARKET_ABI = [
   "constructor(address _stone, address _tool, address _token)",
-  "event Listed(address indexed seller, bool isStone, uint256 tokenId, uint256 price)",
-  "event Sold(address indexed buyer, address indexed seller, bool isStone, uint256 tokenId, uint256 price)",
+  "event Listed(address indexed seller, bool isStone, uint256 indexed tokenId, uint256 price)",
+  "event Delisted(address indexed seller, bool isStone, uint256 indexed tokenId)",
+  "event Sold(address indexed buyer, address indexed seller, bool isStone, uint256 indexed tokenId, uint256 price, uint256 fee)",
+  "event OfferMade(address indexed buyer, bool isStone, uint256 indexed tokenId, uint256 price)",
+  "event OfferCancelled(address indexed buyer, bool isStone, uint256 indexed tokenId)",
+  "event OfferAccepted(address indexed buyer, address indexed seller, bool isStone, uint256 indexed tokenId, uint256 price, uint256 fee)",
   "function list(bool _isStone, uint256 tokenId, uint256 price)",
+  "function delist(bool _isStone, uint256 tokenId)",
   "function buy(bool _isStone, uint256 tokenId)",
+  "function makeOffer(bool _isStone, uint256 tokenId, uint256 price)",
+  "function cancelOffer(bool _isStone, uint256 tokenId)",
+  "function acceptOffer(bool _isStone, uint256 tokenId, address buyer)",
+  "function getOffer(bool _isStone, uint256 tokenId) view returns (address buyer, uint256 price, bool active)",
+  "function getSaleHistory(bool _isStone, uint256 tokenId) view returns (uint256[])",
+  "function feeBps() view returns (uint256)",
+  "function feeReceiver() view returns (address)",
 ];
 
 export const QUEST_ABI = [

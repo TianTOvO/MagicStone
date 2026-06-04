@@ -34,7 +34,13 @@ interface WalletContextType {
   setToolPolishingContract: (polishingAddress: string) => Promise<any>;
   polish: (stoneId: number, toolId: number) => Promise<any>;
   listItem: (isStone: boolean, tokenId: number, price: string) => Promise<any>;
+  delistItem: (isStone: boolean, tokenId: number) => Promise<any>;
   buyItem: (isStone: boolean, tokenId: number) => Promise<any>;
+  makeOffer: (isStone: boolean, tokenId: number, price: string) => Promise<any>;
+  cancelOffer: (isStone: boolean, tokenId: number) => Promise<any>;
+  acceptOffer: (isStone: boolean, tokenId: number, buyer: string) => Promise<any>;
+  getOffer: (isStone: boolean, tokenId: number) => Promise<{ buyer: string; price: bigint; active: boolean }>;
+  getSaleHistory: (isStone: boolean, tokenId: number) => Promise<bigint[]>;
   getTokenBalance: (address: string) => Promise<string>;
   approveStone: (spender: string, tokenId: number) => Promise<any>;
   approveTool: (spender: string, tokenId: number) => Promise<any>;
@@ -122,9 +128,39 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     return await (await contracts.market.list(isStone, tokenId, ethers.parseEther(price))).wait();
   }, [contracts.market]);
 
+  const delistItem = useCallback(async (isStone: boolean, tokenId: number) => {
+    if (!contracts.market) throw new Error('Contract not connected');
+    return await (await contracts.market.delist(isStone, tokenId)).wait();
+  }, [contracts.market]);
+
+  const makeOffer = useCallback(async (isStone: boolean, tokenId: number, price: string) => {
+    if (!contracts.market) throw new Error('Contract not connected');
+    return await (await contracts.market.makeOffer(isStone, tokenId, ethers.parseEther(price))).wait();
+  }, [contracts.market]);
+
+  const cancelOffer = useCallback(async (isStone: boolean, tokenId: number) => {
+    if (!contracts.market) throw new Error('Contract not connected');
+    return await (await contracts.market.cancelOffer(isStone, tokenId)).wait();
+  }, [contracts.market]);
+
+  const acceptOffer = useCallback(async (isStone: boolean, tokenId: number, buyer: string) => {
+    if (!contracts.market) throw new Error('Contract not connected');
+    return await (await contracts.market.acceptOffer(isStone, tokenId, buyer)).wait();
+  }, [contracts.market]);
+
   const buyItem = useCallback(async (isStone: boolean, tokenId: number) => {
     if (!contracts.market) throw new Error('Contract not connected');
     return await (await contracts.market.buy(isStone, tokenId)).wait();
+  }, [contracts.market]);
+
+  const getOffer = useCallback(async (isStone: boolean, tokenId: number) => {
+    if (!contracts.market) throw new Error('Contract not connected');
+    return await contracts.market.getOffer(isStone, tokenId);
+  }, [contracts.market]);
+
+  const getSaleHistory = useCallback(async (isStone: boolean, tokenId: number) => {
+    if (!contracts.market) throw new Error('Contract not connected');
+    return await contracts.market.getSaleHistory(isStone, tokenId);
   }, [contracts.market]);
 
   const getTokenBalance = useCallback(async (address: string) => {
@@ -154,7 +190,8 @@ export function WalletProvider({ children }: { children: ReactNode }) {
       connectWallet, disconnectWallet,
       getStoneProps, setStonePolishingContract,
       getToolProps, setToolPolishingContract,
-      polish, listItem, buyItem, getTokenBalance,
+      polish, listItem, delistItem, buyItem, makeOffer, cancelOffer, acceptOffer,
+      getOffer, getSaleHistory, getTokenBalance,
       approveStone, approveTool, approveToken,
     }}>
       {children}

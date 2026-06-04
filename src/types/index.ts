@@ -44,6 +44,22 @@ export interface UserData {
   quests: Quest[];
 }
 
+// Market types — matches Market.sol
+export interface MarketListing {
+  isStone: boolean;
+  tokenId: number;
+  seller: string;
+  price: number;
+}
+
+export interface MarketOffer {
+  isStone: boolean;
+  tokenId: number;
+  buyer: string;
+  price: number;
+  active: boolean;
+}
+
 // ============================================================
 // Display name mappings
 // ============================================================

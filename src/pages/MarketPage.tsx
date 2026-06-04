@@ -1,336 +1,497 @@
-import { useContext, useState } from 'react';
+import { useContext, useState, useEffect, useCallback } from 'react';
 import { UserDataContext } from '@/contexts/userDataContext';
 import { useContracts } from '@/hooks/useContracts';
-import { STONE_GRADE_COLORS, STONE_GRADE_NAMES, TOOL_LEVEL_COLORS, TOOL_LEVEL_NAMES } from '@/types';
+import { STONE_GRADE_NAMES, TOOL_LEVEL_NAMES } from '@/types';
+import type { MarketListing } from '@/types';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
-
-interface MarketItem {
-  id: number;
-  type: 'stone' | 'tool';
-  // Stone props
-  grade?: number;
-  damage?: number;
-  damageLimit?: number;
-  mysterious?: boolean;
-  isPolishable?: boolean;
-  // Tool props
-  level?: number;
-  durability?: number;
-  durabilityMax?: number;
-  lossCoeff?: number;
-  durabilityConsumption?: number;
-  price: number;
-  seller: string;
-}
-
-const mockMarketItems: MarketItem[] = [
-  { id: 101, type: 'stone', grade: 1, damage: 20, damageLimit: 120, mysterious: false, isPolishable: true, price: 300, seller: 'player123' },
-  { id: 102, type: 'stone', grade: 2, damage: 40, damageLimit: 150, mysterious: false, isPolishable: true, price: 800, seller: 'master_polisher' },
-  { id: 103, type: 'tool', level: 1, durability: 80, durabilityMax: 100, lossCoeff: 0.8, durabilityConsumption: 0.8, price: 500, seller: 'tool_master' },
-  { id: 104, type: 'stone', grade: 0, damage: 0, damageLimit: 100, mysterious: true, isPolishable: true, price: 200, seller: 'treasure_hunter' },
-  { id: 105, type: 'tool', level: 2, durability: 95, durabilityMax: 120, lossCoeff: 0.5, durabilityConsumption: 0.5, price: 1200, seller: 'legendary_craftsman' },
-  { id: 106, type: 'stone', grade: 3, damage: 80, damageLimit: 200, mysterious: false, isPolishable: true, price: 2500, seller: 'gem_collector' },
-];
+import { ethers, type EventLog } from 'ethers';
 
 export default function MarketPage() {
-  const { userData, updateUserData } = useContext(UserDataContext);
-  const { connected, connectWallet, buyItem } = useContracts();
-  const [activeTab, setActiveTab] = useState<'all' | 'stones' | 'tools'>('all');
-  const [marketItems, setMarketItems] = useState<MarketItem[]>(mockMarketItems);
-  const [selectedItem, setSelectedItem] = useState<MarketItem | null>(null);
-  const [showModal, setShowModal] = useState(false);
-  const [buying, setBuying] = useState(false);
-  const [priceFilter, setPriceFilter] = useState<{ min: string; max: string }>({ min: '', max: '' });
+  const { userData } = useContext(UserDataContext);
+  const { connected, connectWallet, contracts, account, buyItem, listItem, delistItem, makeOffer } = useContracts();
+  const [activeTab, setActiveTab] = useState<'all' | 'stones' | 'tools' | 'myListings' | 'offers'>('all');
+  const [listings, setListings] = useState<MarketListing[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const filteredItems = marketItems.filter(item => {
-    if (activeTab === 'stones' && item.type !== 'stone') return false;
-    if (activeTab === 'tools' && item.type !== 'tool') return false;
-    const minPrice = priceFilter.min ? parseInt(priceFilter.min, 10) : 0;
-    const maxPrice = priceFilter.max ? parseInt(priceFilter.max, 10) : Infinity;
-    return item.price >= minPrice && item.price <= maxPrice;
+  // Sell modal
+  const [showSellModal, setShowSellModal] = useState(false);
+  const [sellItem, setSellItem] = useState<{ isStone: boolean; tokenId: number } | null>(null);
+  const [sellPrice, setSellPrice] = useState('');
+  const [selling, setSelling] = useState(false);
+
+  // Buy modal
+  const [showBuyModal, setShowBuyModal] = useState(false);
+  const [selectedListing, setSelectedListing] = useState<MarketListing | null>(null);
+  const [buying, setBuying] = useState(false);
+
+  // Offer modal
+  const [showOfferModal, setShowOfferModal] = useState(false);
+  const [offerTarget, setOfferTarget] = useState<{ isStone: boolean; tokenId: number } | null>(null);
+  const [offerPrice, setOfferPrice] = useState('');
+  const [offering, setOffering] = useState(false);
+
+  const loadListings = useCallback(async () => {
+    if (!contracts.market) { setLoading(false); return; }
+    try {
+      setLoading(true);
+      const filter = contracts.market.filters.Listed();
+      const listedEvents = await contracts.market.queryFilter(filter, -5000);
+      const delistedFilter = contracts.market.filters.Delisted();
+      const delistedEvents = await contracts.market.queryFilter(delistedFilter, -5000);
+      const soldFilter = contracts.market.filters.Sold();
+      const soldEvents = await contracts.market.queryFilter(soldFilter, -5000);
+
+      // Deactivated keys
+      const deactivated = new Set<string>();
+      for (const evt of delistedEvents) {
+        const args = (evt as EventLog).args;
+        deactivated.add(`${args.isStone}-${args.tokenId}`);
+      }
+      for (const evt of soldEvents) {
+        const args = (evt as EventLog).args;
+        deactivated.add(`${args.isStone}-${args.tokenId}`);
+      }
+
+      const parsed: MarketListing[] = [];
+      const seen = new Set<string>();
+      for (const evt of listedEvents.reverse()) {
+        const args = (evt as EventLog).args;
+        const isStone = args.isStone;
+        const tokenId = Number(args.tokenId);
+        const key = `${isStone}-${tokenId}`;
+        if (seen.has(key) || deactivated.has(key)) continue;
+        seen.add(key);
+
+        const listingData = await contracts.market.listings(ethers.keccak256(
+          ethers.solidityPacked(['bool', 'uint256'], [isStone, tokenId])
+        ));
+        if (!listingData.active) continue;
+
+        parsed.push({
+          isStone: Boolean(isStone),
+          tokenId,
+          seller: listingData.seller,
+          price: Number(ethers.formatEther(listingData.price)),
+        });
+      }
+      setListings(parsed);
+    } catch (err) {
+      console.error('Failed to load listings:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, [contracts.market]);
+
+  useEffect(() => {
+    if (connected) loadListings();
+  }, [connected, loadListings]);
+
+  // Listen for new events
+  useEffect(() => {
+    if (!contracts.market) return;
+    const market = contracts.market;
+
+    const onListed = (seller: string, isStone: boolean, tokenId: bigint, price: bigint) => {
+      setListings(prev => {
+        const exists = prev.find(l => l.isStone === isStone && l.tokenId === Number(tokenId));
+        if (exists) return prev;
+        return [...prev, {
+          isStone,
+          tokenId: Number(tokenId),
+          seller,
+          price: Number(ethers.formatEther(price)),
+        }];
+      });
+    };
+    const onDelistedOrSold = (...args: any[]) => {
+      // args[2] is tokenId (indexed), args[1] is isStone (indexed) for Delisted
+      let isStone: boolean, tokenId: number;
+      const raw = args as any[];
+      // Try to extract indexed params
+      if (typeof raw[1] === 'boolean') {
+        isStone = raw[1];
+        tokenId = Number(raw[2]);
+      } else {
+        return; // can't parse
+      }
+      setListings(prev => prev.filter(l => !(l.isStone === isStone && l.tokenId === tokenId)));
+    };
+
+    market.on('Listed', onListed);
+    market.on('Delisted', onDelistedOrSold);
+    market.on('Sold', onDelistedOrSold);
+
+    return () => {
+      market.off('Listed', onListed);
+      market.off('Delisted', onDelistedOrSold);
+      market.off('Sold', onDelistedOrSold);
+    };
+  }, [contracts.market]);
+
+  const filteredItems = listings.filter(item => {
+    if (activeTab === 'stones' && !item.isStone) return false;
+    if (activeTab === 'tools' && item.isStone) return false;
+    if (activeTab === 'myListings' && item.seller.toLowerCase() !== account?.toLowerCase()) return false;
+    return true;
   });
 
-  const handleBuyItem = async () => {
-    if (!selectedItem) return;
-
-    if (!connected) {
-      toast.error('请先连接钱包');
-      await connectWallet();
-      return;
+  const handleSell = useCallback(async () => {
+    if (!sellItem || !sellPrice) return;
+    try {
+      setSelling(true);
+      await listItem(sellItem.isStone, sellItem.tokenId, sellPrice);
+      toast.success('上架成功');
+      setShowSellModal(false);
+      setSellItem(null);
+      setSellPrice('');
+      setTimeout(loadListings, 2000);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : '上架失败';
+      toast.error(msg);
+    } finally {
+      setSelling(false);
     }
+  }, [sellItem, sellPrice, listItem, loadListings]);
 
+  const handleBuy = async () => {
+    if (!selectedListing) return;
     try {
       setBuying(true);
-      toast.loading('正在处理购买...');
-
-      if (userData.coins < selectedItem.price) {
-        toast.error('游戏币不足，无法购买');
-        setBuying(false);
-        return;
-      }
-
-      const isStone = selectedItem.type === 'stone';
-      await buyItem(isStone, selectedItem.id);
-
-      if (isStone) {
-        updateUserData({
-          stones: [...userData.stones, {
-            id: Date.now(),
-            grade: selectedItem.grade ?? 0,
-            damage: selectedItem.damage ?? 0,
-            damageLimit: selectedItem.damageLimit ?? 100,
-            mysterious: selectedItem.mysterious ?? false,
-            isPolishable: selectedItem.isPolishable ?? true,
-          }],
-          coins: userData.coins - selectedItem.price,
-        });
-      } else {
-        updateUserData({
-          tools: [...userData.tools, {
-            id: Date.now(),
-            level: selectedItem.level ?? 0,
-            durability: selectedItem.durability ?? 100,
-            durabilityMax: selectedItem.durabilityMax ?? 100,
-            lossCoeff: selectedItem.lossCoeff ?? 1,
-            durabilityConsumption: selectedItem.durabilityConsumption ?? 1,
-          }],
-          coins: userData.coins - selectedItem.price,
-        });
-      }
-
-      setMarketItems(prev => prev.filter(item => item.id !== selectedItem.id));
-      toast.success(`成功购买${STONE_GRADE_NAMES[selectedItem.grade ?? selectedItem.level ?? 0]}${selectedItem.type === 'stone' ? '原石' : '工具'}`);
-      setShowModal(false);
-      setSelectedItem(null);
-    } catch (error) {
-      const message = error instanceof Error ? error.message : '购买失败';
-      toast.error(`错误: ${message}`);
+      await buyItem(selectedListing.isStone, selectedListing.tokenId);
+      setListings(prev => prev.filter(l => !(l.isStone === selectedListing.isStone && l.tokenId === selectedListing.tokenId)));
+      toast.success('购买成功');
+      setShowBuyModal(false);
+      setSelectedListing(null);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : '购买失败';
+      toast.error(msg);
     } finally {
       setBuying(false);
+    }
+  };
+
+  const handleDelist = async (isStone: boolean, tokenId: number) => {
+    try {
+      await delistItem(isStone, tokenId);
+      setListings(prev => prev.filter(l => !(l.isStone === isStone && l.tokenId === tokenId)));
+      toast.success('已下架');
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : '下架失败';
+      toast.error(msg);
+    }
+  };
+
+  const handleMakeOffer = async () => {
+    if (!offerTarget || !offerPrice) return;
+    try {
+      setOffering(true);
+      await makeOffer(offerTarget.isStone, offerTarget.tokenId, offerPrice);
+      toast.success('出价成功');
+      setShowOfferModal(false);
+      setOfferTarget(null);
+      setOfferPrice('');
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : '出价失败';
+      toast.error(msg);
+    } finally {
+      setOffering(false);
     }
   };
 
   return (
     <div className="space-y-6">
       <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
+        initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
         className="bg-gradient-to-r from-cyan-50 via-blue-50 to-purple-50 rounded-2xl p-8 border-2 border-blue-200 shadow-xl"
       >
-        <h1 className="text-4xl font-black mb-2 bg-clip-text text-transparent bg-gradient-to-r from-cyan-600 via-blue-600 to-purple-600">💎 交易市场</h1>
-        <p className="text-gray-700 text-lg font-medium">浏览、购买其他玩家出售的原石和工具</p>
+        <h1 className="text-4xl font-black mb-2 bg-clip-text text-transparent bg-gradient-to-r from-cyan-600 via-blue-600 to-purple-600">NFT 交易所</h1>
+        <p className="text-gray-700 text-lg font-medium">自由买卖原石和工具 · 挂单、出价、即时成交</p>
       </motion.div>
 
-      <div className="bg-gradient-to-r from-blue-50 to-purple-50 backdrop-blur-sm rounded-2xl p-6 border-2 border-blue-300 shadow-lg">
-        <div className="flex flex-wrap gap-4">
+      {/* Filters & Actions */}
+      <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-2xl p-6 border-2 border-blue-300 shadow-lg">
+        <div className="flex flex-wrap gap-4 items-center justify-between">
           <div className="bg-gradient-to-r from-blue-100 to-purple-100 rounded-xl p-1 inline-flex border-2 border-purple-300 shadow">
-            {(['all', 'stones', 'tools'] as const).map(tab => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
+            {([
+              { key: 'all', label: '全部' },
+              { key: 'stones', label: '原石' },
+              { key: 'tools', label: '工具' },
+              { key: 'myListings', label: '我的挂单' },
+            ] as const).map(tab => (
+              <button key={tab.key}
+                onClick={() => setActiveTab(tab.key)}
                 className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${
-                  activeTab === tab
+                  activeTab === tab.key
                     ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white shadow-lg'
                     : 'text-gray-700 hover:text-blue-600'
                 }`}
-              >
-                {tab === 'all' ? '全部' : tab === 'stones' ? '原石' : '工具'}
-              </button>
+              >{tab.label}</button>
             ))}
           </div>
-
-          <div className="flex gap-2 items-center">
-            <span className="text-sm text-gray-700 font-semibold">价格范围:</span>
-            <input
-              type="number" placeholder="最低"
-              value={priceFilter.min}
-              onChange={(e) => setPriceFilter({ ...priceFilter, min: e.target.value })}
-              className="bg-white border-2 border-blue-300 rounded-lg px-3 py-1 text-sm w-24 text-gray-800 placeholder-gray-400 focus:border-blue-500 focus:outline-none"
-              min="0"
-            />
-            <span className="text-gray-700 font-semibold">-</span>
-            <input
-              type="number" placeholder="最高"
-              value={priceFilter.max}
-              onChange={(e) => setPriceFilter({ ...priceFilter, max: e.target.value })}
-              className="bg-white border-2 border-blue-300 rounded-lg px-3 py-1 text-sm w-24 text-gray-800 placeholder-gray-400 focus:border-blue-500 focus:outline-none"
-              min="0"
-            />
+          <div className="flex gap-3">
+            <button onClick={() => { setOfferTarget({ isStone: true, tokenId: 0 }); setShowOfferModal(true); }}
+              className="px-4 py-2 rounded-lg bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold shadow hover:scale-105 transition-transform"
+            >发起出价</button>
+            <button onClick={() => {
+              if (!connected) { toast.error('请先连接钱包'); connectWallet(); return; }
+              setShowSellModal(true);
+            }}
+              className="px-4 py-2 rounded-lg bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-bold shadow hover:scale-105 transition-transform"
+            >上架 NFT</button>
           </div>
         </div>
       </div>
 
-      <div>
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-2xl font-black text-gray-800 flex items-center"><i className="fas fa-shopping-bag text-blue-600 mr-2"></i>可购买物品</h2>
-          <span className="text-gray-600 text-sm font-semibold bg-blue-50 px-3 py-1 rounded-full border border-blue-300">共 {filteredItems.length} 件</span>
+      {/* Loading */}
+      {loading && (
+        <div className="flex items-center justify-center py-20">
+          <i className="fas fa-spinner fa-spin text-4xl text-blue-500"></i>
+          <span className="ml-3 text-lg text-gray-600 font-semibold">加载挂单...</span>
         </div>
+      )}
 
-        {filteredItems.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {filteredItems.map((item) => (
-              <motion.div
-                key={item.id}
-                whileHover={{ scale: 1.08, y: -8 }}
-                className="rounded-2xl overflow-hidden border-2 shadow-lg transition-all bg-gradient-to-br from-white to-blue-50 border-blue-300 hover:border-blue-500"
-              >
-                <div className="relative h-40 flex items-center justify-center bg-gradient-to-br from-blue-50 to-purple-50">
-                  {item.type === 'stone' ? (
-                    <>
-                      <div className={`absolute inset-0 rounded-full ${STONE_GRADE_COLORS[item.grade ?? 0]} opacity-20 blur-xl`}></div>
-                      <i className="fas fa-gem text-7xl text-white relative"></i>
-                    </>
-                  ) : (
-                    <>
-                      <div className={`absolute inset-0 rounded-full ${TOOL_LEVEL_COLORS[item.level ?? 0]} opacity-20 blur-xl`}></div>
-                      <i className="fas fa-wrench text-7xl text-white relative"></i>
-                    </>
-                  )}
-                  {item.mysterious && (
-                    <div className="absolute top-2 right-2 bg-purple-900/80 border border-purple-500/30 rounded-full px-2 py-1 text-xs text-purple-300 flex items-center">
-                      <i className="fas fa-star text-yellow-400 mr-1"></i> 神秘
-                    </div>
-                  )}
-                </div>
+      {/* Listings Grid */}
+      {!loading && (
+        <div>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-2xl font-black text-gray-800 flex items-center">
+              <i className="fas fa-store text-blue-600 mr-2"></i>
+              {activeTab === 'myListings' ? '我的挂单' : '市场挂单'}
+            </h2>
+            <span className="text-gray-600 text-sm font-semibold bg-blue-50 px-3 py-1 rounded-full border border-blue-300">
+              共 {filteredItems.length} 件
+            </span>
+          </div>
 
-                <div className="p-5">
-                  <div className="flex justify-between items-start mb-3">
-                    <h3 className="text-xl font-bold text-gray-800">
-                      {item.type === 'stone' ? STONE_GRADE_NAMES[item.grade ?? 0] : TOOL_LEVEL_NAMES[item.level ?? 0]}{item.type === 'stone' ? '原石' : '工具'}
-                    </h3>
-                    <div className="flex items-center bg-gradient-to-r from-yellow-100 to-amber-100 border-2 border-yellow-400 rounded-lg px-2 py-1 shadow">
-                      <i className="fas fa-coins text-yellow-600 text-xs mr-1"></i>
-                      <span className="font-bold text-yellow-700">{item.price}</span>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2 mb-4">
-                    {item.type === 'stone' ? (
+          {filteredItems.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+              {filteredItems.map((item) => (
+                <motion.div key={`${item.isStone}-${item.tokenId}`}
+                  whileHover={{ scale: 1.05, y: -6 }}
+                  className="rounded-2xl overflow-hidden border-2 shadow-lg transition-all bg-gradient-to-br from-white to-blue-50 border-blue-300 hover:border-blue-500"
+                >
+                  <div className={`relative h-40 flex items-center justify-center ${
+                    item.isStone
+                      ? 'bg-gradient-to-br from-blue-50 to-purple-50'
+                      : 'bg-gradient-to-br from-green-50 to-emerald-50'
+                  }`}>
+                    {item.isStone ? (
                       <>
-                        <div className="flex justify-between text-sm">
-                          <span className="text-gray-700 font-semibold">损耗</span>
-                          <span className="text-gray-800 font-bold">{item.damage}/{item.damageLimit}</span>
-                        </div>
-                        <div className="w-full bg-blue-300 rounded-full h-2">
-                          <div className="h-2 rounded-full bg-gradient-to-r from-blue-500 to-cyan-500 shadow-md"
-                            style={{ width: `${((item.damage ?? 0) / (item.damageLimit ?? 1)) * 100}%` }}
-                          ></div>
-                        </div>
+                        <div className="absolute inset-0 rounded-full bg-blue-400 opacity-20 blur-xl"></div>
+                        <i className="fas fa-gem text-7xl text-white relative drop-shadow-lg"></i>
                       </>
                     ) : (
                       <>
-                        <div className="flex justify-between text-sm">
-                          <span className="text-gray-700 font-semibold">耐久</span>
-                          <span className="text-gray-800 font-bold">{item.durability}/{item.durabilityMax}</span>
-                        </div>
-                        <div className="w-full bg-green-300 rounded-full h-2">
-                          <div className="h-2 rounded-full bg-gradient-to-r from-green-500 to-emerald-500 shadow-md"
-                            style={{ width: `${((item.durability ?? 0) / (item.durabilityMax ?? 1)) * 100}%` }}
-                          ></div>
-                        </div>
+                        <div className="absolute inset-0 rounded-full bg-green-400 opacity-20 blur-xl"></div>
+                        <i className="fas fa-wrench text-7xl text-white relative drop-shadow-lg"></i>
                       </>
                     )}
-                    <div className="text-sm text-gray-700 font-semibold">
-                      <i className="fas fa-user mr-1 text-xs"></i> 卖家: {item.seller}
-                    </div>
                   </div>
 
-                  <motion.button
-                    whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
-                    onClick={() => { setSelectedItem(item); setShowModal(true); }}
-                    className="w-full py-2 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg text-white font-medium transition-all"
-                  >
-                    立即购买
-                  </motion.button>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        ) : (
-          <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-2xl p-12 border-2 border-blue-300 flex flex-col items-center justify-center min-h-[400px] shadow-lg">
-            <i className="fas fa-shopping-bag text-6xl text-blue-400 mb-4"></i>
-            <h3 className="text-2xl font-bold text-gray-800 mb-2">暂无符合条件的物品</h3>
-            <p className="text-gray-700 text-center text-lg">尝试调整筛选条件或稍后再来查看</p>
-          </div>
-        )}
-      </div>
+                  <div className="p-5">
+                    <div className="flex justify-between items-start mb-3">
+                      <h3 className="text-xl font-bold text-gray-800">
+                        {item.isStone ? '原石' : '工具'} #{item.tokenId}
+                      </h3>
+                      <div className="flex items-center bg-gradient-to-r from-yellow-100 to-amber-100 border-2 border-yellow-400 rounded-lg px-2 py-1 shadow">
+                        <i className="fas fa-coins text-yellow-600 text-xs mr-1"></i>
+                        <span className="font-bold text-yellow-700">{item.price}</span>
+                      </div>
+                    </div>
 
-      {/* Buy modal */}
-      {showModal && selectedItem && (
-        <motion.div
-          initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                    <div className="text-sm text-gray-600 mb-4">
+                      <span className="truncate block" title={item.seller}>
+                        卖家: {item.seller.slice(0, 6)}...{item.seller.slice(-4)}
+                      </span>
+                    </div>
+
+                    {activeTab === 'myListings' ? (
+                      <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+                        onClick={() => handleDelist(item.isStone, item.tokenId)}
+                        className="w-full py-2 bg-gradient-to-r from-red-500 to-rose-500 rounded-lg text-white font-medium"
+                      >下架</motion.button>
+                    ) : (
+                      <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+                        onClick={() => {
+                          if (!connected) { toast.error('请先连接钱包'); connectWallet(); return; }
+                          setSelectedListing(item); setShowBuyModal(true);
+                        }}
+                        disabled={item.seller.toLowerCase() === account?.toLowerCase()}
+                        className={`w-full py-2 rounded-lg text-white font-medium transition-all ${
+                          item.seller.toLowerCase() === account?.toLowerCase()
+                            ? 'bg-gray-400 cursor-not-allowed'
+                            : 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg'
+                        }`}
+                      >{item.seller.toLowerCase() === account?.toLowerCase() ? '自己的挂单' : '立即购买'}</motion.button>
+                    )}
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          ) : (
+            <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-2xl p-12 border-2 border-blue-300 flex flex-col items-center justify-center min-h-[300px] shadow-lg">
+              <i className="fas fa-store-slash text-5xl text-blue-300 mb-4"></i>
+              <h3 className="text-xl font-bold text-gray-700 mb-1">暂无挂单</h3>
+              <p className="text-gray-500">成为第一个上架 NFT 的人吧</p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Buy Modal */}
+      {showBuyModal && selectedListing && (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
           className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4"
-          onClick={() => setShowModal(false)}
+          onClick={() => setShowBuyModal(false)}
         >
-          <motion.div
-            initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }}
+          <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }}
             className="bg-gradient-to-br from-white to-blue-50 rounded-2xl p-6 max-w-md w-full border-2 border-blue-300 shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="text-2xl font-bold text-gray-800 mb-4">✨ 确认购买</h3>
-            <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl p-4 mb-6 border border-blue-300">
+            <h3 className="text-2xl font-bold text-gray-800 mb-4">确认购买</h3>
+            <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl p-4 mb-4 border border-blue-300">
               <div className="flex items-center gap-4">
-                <div className="relative w-16 h-16 flex items-center justify-center">
-                  {selectedItem.type === 'stone' ? (
-                    <>
-                      <div className={`absolute inset-0 rounded-full ${STONE_GRADE_COLORS[selectedItem.grade ?? 0]} opacity-20 blur-xl`}></div>
-                      <i className="fas fa-gem text-3xl text-white relative"></i>
-                    </>
-                  ) : (
-                    <>
-                      <div className={`absolute inset-0 rounded-full ${TOOL_LEVEL_COLORS[selectedItem.level ?? 0]} opacity-20 blur-xl`}></div>
-                      <i className="fas fa-wrench text-3xl text-white relative"></i>
-                    </>
-                  )}
-                </div>
+                <i className={`fas ${selectedListing.isStone ? 'fa-gem' : 'fa-wrench'} text-3xl`}></i>
                 <div>
                   <h4 className="text-lg font-bold text-gray-800">
-                    {selectedItem.type === 'stone'
-                      ? STONE_GRADE_NAMES[selectedItem.grade ?? 0] + '原石'
-                      : TOOL_LEVEL_NAMES[selectedItem.level ?? 0] + '工具'}
+                    {selectedListing.isStone ? '原石' : '工具'} #{selectedListing.tokenId}
                   </h4>
-                  <p className="text-gray-700 text-sm font-medium">卖家: {selectedItem.seller}</p>
+                  <p className="text-gray-600 text-sm">卖家: {selectedListing.seller.slice(0, 6)}...{selectedListing.seller.slice(-4)}</p>
                 </div>
               </div>
             </div>
+            <div className="flex justify-between text-lg mb-4">
+              <span className="text-gray-700 font-semibold">价格</span>
+              <span className="font-bold flex items-center text-yellow-700">
+                <i className="fas fa-coins text-yellow-600 mr-1"></i>{selectedListing.price}
+              </span>
+            </div>
+            <div className="flex gap-3">
+              <button onClick={() => setShowBuyModal(false)}
+                className="flex-1 py-3 bg-gray-300 rounded-xl text-gray-800 font-bold hover:bg-gray-400 transition-all"
+              >取消</button>
+              <button onClick={handleBuy} disabled={buying}
+                className="flex-1 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 rounded-xl text-white font-bold hover:from-cyan-700 hover:to-blue-700 transition-all shadow-lg disabled:opacity-50"
+              >{buying ? '处理中...' : '确认购买'}</button>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
 
-            <div className="space-y-3 mb-6">
-              <div className="flex justify-between text-lg">
-                <span className="text-gray-700 font-semibold">价格</span>
-                <span className="font-bold flex items-center text-yellow-700">
-                  <i className="fas fa-coins text-yellow-600 mr-1"></i>{selectedItem.price}
-                </span>
+      {/* Sell Modal */}
+      {showSellModal && (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+          className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          onClick={() => { setShowSellModal(false); setSellItem(null); }}
+        >
+          <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }}
+            className="bg-gradient-to-br from-white to-blue-50 rounded-2xl p-6 max-w-md w-full border-2 border-blue-300 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-2xl font-bold text-gray-800 mb-4">上架 NFT</h3>
+            <p className="text-gray-600 mb-4 text-sm font-medium">选择你要出售的原石或工具</p>
+
+            <div className="space-y-3 mb-4">
+              <h4 className="font-bold text-gray-700">你的原石:</h4>
+              <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto">
+                {userData.stones.length === 0 && <span className="text-gray-400 text-sm">暂无原石</span>}
+                {userData.stones.map(s => (
+                  <button key={s.id} onClick={() => setSellItem({ isStone: true, tokenId: s.id })}
+                    className={`px-3 py-1 rounded-lg text-sm font-bold border-2 transition-all ${
+                      sellItem?.isStone && sellItem.tokenId === s.id
+                        ? 'border-blue-600 bg-blue-100 text-blue-700'
+                        : 'border-gray-300 hover:border-blue-400'
+                    }`}
+                  >原石 #{s.id} ({STONE_GRADE_NAMES[s.grade]})</button>
+                ))}
               </div>
-              <div className="flex justify-between text-lg">
-                <span className="text-gray-700 font-semibold">余额</span>
-                <span className="font-bold flex items-center text-yellow-700">
-                  <i className="fas fa-coins text-yellow-600 mr-1"></i>{userData.coins}
-                </span>
+
+              <h4 className="font-bold text-gray-700 mt-4">你的工具:</h4>
+              <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto">
+                {userData.tools.length === 0 && <span className="text-gray-400 text-sm">暂无工具</span>}
+                {userData.tools.map(t => (
+                  <button key={t.id} onClick={() => setSellItem({ isStone: false, tokenId: t.id })}
+                    className={`px-3 py-1 rounded-lg text-sm font-bold border-2 transition-all ${
+                      sellItem && !sellItem.isStone && sellItem.tokenId === t.id
+                        ? 'border-blue-600 bg-blue-100 text-blue-700'
+                        : 'border-gray-300 hover:border-blue-400'
+                    }`}
+                  >工具 #{t.id} ({TOOL_LEVEL_NAMES[t.level]})</button>
+                ))}
               </div>
-              {userData.coins < selectedItem.price && (
-                <motion.p animate={{ scale: [1, 1.05, 1] }} transition={{ duration: 2, repeat: Infinity }}
-                  className="text-red-600 text-sm font-bold flex items-center bg-red-100 px-3 py-2 rounded-lg border border-red-400">
-                  <i className="fas fa-exclamation-circle mr-1"></i> 余额不足，请先获取更多游戏币
-                </motion.p>
-              )}
             </div>
 
+            {sellItem && (
+              <div className="mb-4">
+                <label className="block text-sm font-bold text-gray-700 mb-1">价格 (MSTK)</label>
+                <input type="number" value={sellPrice} onChange={e => setSellPrice(e.target.value)}
+                  placeholder="输入价格" min="1"
+                  className="w-full border-2 border-blue-300 rounded-xl px-4 py-2 text-gray-800 focus:border-blue-500 focus:outline-none"
+                />
+              </div>
+            )}
+
             <div className="flex gap-3">
-              <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
-                onClick={() => setShowModal(false)}
-                className="flex-1 py-3 bg-gradient-to-r from-gray-300 to-gray-400 rounded-xl text-gray-800 font-bold hover:from-gray-400 hover:to-gray-500 transition-all shadow"
-              >取消</motion.button>
-              <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
-                onClick={handleBuyItem}
-                disabled={userData.coins < selectedItem.price || buying}
-                className={`flex-1 py-3 rounded-xl text-white font-bold transition-all shadow-lg ${
-                  userData.coins >= selectedItem.price && !buying
-                    ? 'bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700'
-                    : 'bg-gray-400 text-gray-600 cursor-not-allowed'
-                }`}
-              >{buying ? '处理中...' : '确认购买'}</motion.button>
+              <button onClick={() => { setShowSellModal(false); setSellItem(null); }}
+                className="flex-1 py-3 bg-gray-300 rounded-xl text-gray-800 font-bold hover:bg-gray-400 transition-all"
+              >取消</button>
+              <button onClick={handleSell} disabled={!sellItem || !sellPrice || selling}
+                className="flex-1 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 rounded-xl text-white font-bold hover:from-cyan-700 hover:to-blue-700 transition-all shadow-lg disabled:opacity-50"
+              >{selling ? '上架中...' : '确认上架'}</button>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+
+      {/* Offer Modal */}
+      {showOfferModal && (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+          className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          onClick={() => { setShowOfferModal(false); setOfferTarget(null); }}
+        >
+          <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }}
+            className="bg-gradient-to-br from-white to-amber-50 rounded-2xl p-6 max-w-md w-full border-2 border-amber-300 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-2xl font-bold text-gray-800 mb-4">发起出价</h3>
+            <div className="space-y-4 mb-4">
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-1">类型</label>
+                <select value={offerTarget?.isStone ? 'stone' : 'tool'}
+                  onChange={e => setOfferTarget({ isStone: e.target.value === 'stone', tokenId: 0 })}
+                  className="w-full border-2 border-amber-300 rounded-xl px-4 py-2 text-gray-800 focus:border-amber-500 focus:outline-none"
+                >
+                  <option value="stone">原石</option>
+                  <option value="tool">工具</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-1">Token ID</label>
+                <input type="number" value={offerTarget?.tokenId || ''}
+                  onChange={e => setOfferTarget(prev => prev ? { ...prev, tokenId: parseInt(e.target.value) || 0 } : { isStone: true, tokenId: parseInt(e.target.value) || 0 })}
+                  placeholder="输入 NFT ID" min="1"
+                  className="w-full border-2 border-amber-300 rounded-xl px-4 py-2 text-gray-800 focus:border-amber-500 focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-1">出价 (MSTK)</label>
+                <input type="number" value={offerPrice} onChange={e => setOfferPrice(e.target.value)}
+                  placeholder="输入出价" min="1"
+                  className="w-full border-2 border-amber-300 rounded-xl px-4 py-2 text-gray-800 focus:border-amber-500 focus:outline-none"
+                />
+              </div>
+            </div>
+            <div className="text-xs text-gray-500 mb-4 bg-amber-50 p-2 rounded-lg border border-amber-200">
+              出价金额将从你的钱包中扣除并托管在合约中。卖家接受后自动成交；你可以随时撤回出价。
+            </div>
+            <div className="flex gap-3">
+              <button onClick={() => { setShowOfferModal(false); setOfferTarget(null); }}
+                className="flex-1 py-3 bg-gray-300 rounded-xl text-gray-800 font-bold hover:bg-gray-400 transition-all"
+              >取消</button>
+              <button onClick={handleMakeOffer} disabled={!offerTarget?.tokenId || !offerPrice || offering}
+                className="flex-1 py-3 bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl text-white font-bold hover:from-amber-600 hover:to-orange-600 transition-all shadow-lg disabled:opacity-50"
+              >{offering ? '出价中...' : '确认出价'}</button>
             </div>
           </motion.div>
         </motion.div>

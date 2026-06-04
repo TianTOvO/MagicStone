@@ -28,7 +28,10 @@
       "PowerShell(npx solc@0.8.28 --base-path . --include-path node_modules contracts/StoneNFT.sol 2>&1)",
       "PowerShell($remappings = \"node_modules/@openzeppelin/=node_modules/@openzeppelin/\")",
       "PowerShell(New-Item -ItemType Directory -Path \"d:\\\\magicStone\\\\.deps\\\\npm\\\\@openzeppelin\" -Force)",
-      "PowerShell(Copy-Item -Path \"d:\\\\magicStone\\\\node_modules\\\\@openzeppelin\\\\contracts\" -Destination \"d:\\\\magicStone\\\\.deps\\\\npm\\\\@openzeppelin\\\\contracts\" -Recurse -Force)"
+      "PowerShell(Copy-Item -Path \"d:\\\\magicStone\\\\node_modules\\\\@openzeppelin\\\\contracts\" -Destination \"d:\\\\magicStone\\\\.deps\\\\npm\\\\@openzeppelin\\\\contracts\" -Recurse -Force)",
+      "PowerShell(npx hardhat compile 2>&1)",
+      "PowerShell(npx hardhat test 2>&1)",
+      "PowerShell(Rename-Item -Path \"d:\\\\magicStone\\\\test\\\\MagicStone.js\" -NewName \"MagicStone.cjs\")"
     ]
   }
 }
