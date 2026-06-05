@@ -18,7 +18,7 @@ export default function InventoryPage() {
 
   const stoneStats = {
     total: userData.stones.length,
-    polishable: userData.stones.filter(s => s.isPolishable).length,
+    polishable: userData.stones.filter(s => (s.damage ?? 0) < (s.damageLimit ?? 1)).length,
   };
 
   const toolStats = {
@@ -141,14 +141,14 @@ export default function InventoryPage() {
                 <motion.div
                   key={stone.id}
                   className={`rounded-2xl p-6 border-2 shadow-lg hover:scale-105 hover:-translate-y-2 hover:shadow-xl transition-all duration-150 ${
-                    stone.isPolishable
+                    ((stone.damage ?? 0) < (stone.damageLimit ?? 1))
                       ? 'bg-gradient-to-br from-blue-50 to-blue-100 border-blue-400 hover:border-blue-500'
                       : 'bg-gradient-to-br from-gray-50 to-gray-100 border-gray-300 opacity-60'
                   }`}
                 >
                   <div className="relative h-32 flex items-center justify-center mb-4">
                     <div className={`absolute inset-0 rounded-full ${STONE_GRADE_COLORS[stone.grade]} opacity-20 blur-xl`}></div>
-                    <i className={`fas fa-gem text-6xl ${stone.isPolishable ? 'text-white' : 'text-gray-500'}`}></i>
+                    <i className={`fas fa-gem text-6xl ${((stone.damage ?? 0) < (stone.damageLimit ?? 1)) ? 'text-white' : 'text-gray-500'}`}></i>
                   </div>
 
                   <h3 className="text-lg font-bold text-center mb-1 text-gray-800">
@@ -162,7 +162,7 @@ export default function InventoryPage() {
                   <div className="w-full bg-gray-300 rounded-full h-2 mb-1">
                     <div
                       className={`h-2 rounded-full ${
-                        stone.isPolishable ? 'bg-gradient-to-r from-blue-500 to-cyan-500' : 'bg-red-400'
+                        ((stone.damage ?? 0) < (stone.damageLimit ?? 1)) ? 'bg-gradient-to-r from-blue-500 to-cyan-500' : 'bg-red-400'
                       }`}
                       style={{ width: `${(stone.damage / stone.damageLimit) * 100}%` }}
                     ></div>
@@ -173,7 +173,7 @@ export default function InventoryPage() {
                     <span>{stone.damage}/{stone.damageLimit}</span>
                   </div>
 
-                  {!stone.isPolishable && (
+                  {!((stone.damage ?? 0) < (stone.damageLimit ?? 1)) && (
                     <motion.div
                       animate={{ scale: [1, 1.05, 1] }}
                       transition={{ duration: 2, repeat: Infinity }}

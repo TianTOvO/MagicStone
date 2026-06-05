@@ -13,7 +13,7 @@ export default function PolishingPage() {
   const [selectedTool, setSelectedTool] = useState<number | null>(null);
   const [isPolishing, setIsPolishing] = useState(false);
 
-  const polishableStones = userData.stones.filter(stone => stone.isPolishable);
+  const polishableStones = userData.stones.filter(stone => (stone.damage ?? 0) < (stone.damageLimit ?? 1));
   const usableTools = userData.tools.filter(tool => tool.durability > 0);
 
   const handlePolish = async () => {

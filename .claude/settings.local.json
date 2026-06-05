@@ -34,7 +34,8 @@
       "PowerShell(Rename-Item -Path \"d:\\\\magicStone\\\\test\\\\MagicStone.js\" -NewName \"MagicStone.cjs\")",
       "PowerShell(Get-ChildItem -Path \"d:\\\\magicStone\" -Recurse -File | Where-Object { $_.FullName -notmatch \"node_modules|\\\\.git|dist|\\\\.pnp\" } | ForEach-Object { $_.FullName.Replace\\(\"d:\\\\magicStone\\\\\", \"\"\\) } | Sort-Object)",
       "PowerShell(Get-ChildItem -Path \"d:\\\\magicStone\" -Recurse -File | Where-Object { $_.FullName -notmatch \"node_modules|\\\\.git|dist|\\\\.pnp|\\\\.deps|\\\\.claude\" } | ForEach-Object { $_.FullName.Replace\\(\"d:\\\\magicStone\\\\\", \"\"\\) } | Sort-Object)",
-      "PowerShell(npm uninstall recharts zod 2>&1)"
+      "PowerShell(npm uninstall recharts zod 2>&1)",
+      "Bash(git checkout *)"
     ]
   }
 }
