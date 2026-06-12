@@ -1,6 +1,6 @@
 import { useContext, useState } from 'react';
 import { UserDataContext } from '@/contexts/userDataContext';
-import { useContracts } from '@/hooks/useContracts';
+import { useContracts } from '@/contexts/walletContext';
 import { TOOL_LEVEL_NAMES, TOOL_LEVEL_COLORS } from '@/types';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';

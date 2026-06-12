@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react';
 import { ethers, BrowserProvider, Contract } from 'ethers';
-import { getContractAddresses } from '../lib/contractAddresses';
+import { getContractAddresses } from '../contracts/contractAddresses';
 import {
   STONE_NFT_ABI,
   TOOL_NFT_ABI,
@@ -8,7 +8,7 @@ import {
   POLISHING_ABI,
   MARKET_ABI,
   QUEST_ABI,
-} from '../lib/contractABIs';
+} from '../contracts/contractABIs';
 
 export interface ContractInstances {
   stoneNFT: Contract | null;

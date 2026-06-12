@@ -2,7 +2,7 @@ import { useContext, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { ThemeContext } from '@/contexts/themeContext';
 import { UserDataContext } from '@/contexts/userDataContext';
-import { useContracts } from '@/hooks/useContracts';
+import { useContracts } from '@/contexts/walletContext';
 import { AuthContext } from '@/contexts/authContext';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -49,6 +49,7 @@ export default function Navbar() {
               { to: '/toolcraft', icon: 'fa-layer-group', label: '合成' },
               { to: '/market', icon: 'fa-shopping-bag', label: '交易所' },
               { to: '/quests', icon: 'fa-clipboard-list', label: '任务' },
+              { to: '/collection', icon: 'fa-book', label: '图鉴' },
             ].map(item => (
               <Link
                 key={item.to}
@@ -145,6 +146,7 @@ export default function Navbar() {
                 { to: '/toolcraft', icon: 'fa-layer-group', label: '合成' },
                 { to: '/market', icon: 'fa-shopping-bag', label: '交易所' },
                 { to: '/quests', icon: 'fa-clipboard-list', label: '任务' },
+              { to: '/collection', icon: 'fa-book', label: '图鉴' },
               ].map(item => (
                 <Link
                   key={item.to}

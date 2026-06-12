@@ -1,6 +1,6 @@
 import { useContext, useState } from 'react';
 import { UserDataContext } from '@/contexts/userDataContext';
-import { STONE_GRADE_COLORS, STONE_GRADE_NAMES, TOOL_LEVEL_COLORS, TOOL_LEVEL_NAMES } from '@/types';
+import { STONE_GRADE_COLORS, STONE_GRADE_NAMES, TOOL_LEVEL_COLORS, TOOL_LEVEL_NAMES, getStoneDisplayName } from '@/types';
 import { motion } from 'framer-motion';
 import { Empty } from '@/components/Empty';
 
@@ -35,7 +35,7 @@ export default function InventoryPage() {
         className="bg-gradient-to-r from-blue-50 via-purple-50 to-pink-50 rounded-2xl p-8 border-2 border-purple-200 shadow-xl"
       >
         <h1 className="text-4xl font-black mb-2 bg-clip-text text-transparent bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600">📦 我的资产</h1>
-        <p className="text-gray-700 text-lg font-medium">管理你的原石和打磨工具</p>
+        <p className="text-gray-700 text-lg font-medium">管理你的矿石和打磨工具</p>
       </motion.div>
 
       <div className="bg-gradient-to-r from-blue-50 to-purple-50 backdrop-blur-sm rounded-xl p-1 inline-flex border-2 border-purple-300">
@@ -47,7 +47,7 @@ export default function InventoryPage() {
               : 'text-gray-600 hover:text-blue-600'
           }`}
         >
-          <i className="fas fa-gem mr-2"></i> 原石 ({userData.stones.length})
+          <i className="fas fa-gem mr-2"></i> 矿石 ({userData.stones.length})
         </button>
         <button
           onClick={() => setActiveTab('tools')}
@@ -131,7 +131,7 @@ export default function InventoryPage() {
       <div>
         <h2 className="text-2xl font-black text-gray-800 mb-4 flex items-center">
           <i className={`mr-2 text-2xl ${activeTab === 'stones' ? 'fas fa-gem text-blue-600' : 'fas fa-tools text-green-600'}`}></i>
-          {activeTab === 'stones' ? '我的原石' : '我的工具'}
+          {activeTab === 'stones' ? '我的矿石' : '我的工具'}
         </h2>
 
         {activeTab === 'stones' ? (
@@ -152,11 +152,11 @@ export default function InventoryPage() {
                   </div>
 
                   <h3 className="text-lg font-bold text-center mb-1 text-gray-800">
-                    {STONE_GRADE_NAMES[stone.grade]}原石
+                    {getStoneDisplayName(stone.grade, stone.subGrade)}
                   </h3>
 
                   <p className="text-sm text-gray-600 text-center mb-3 font-medium">
-                    {stone.mysterious ? '神秘原石' : '普通原石'}
+                    {stone.mysterious ? '神秘矿石' : '常规矿石'}
                   </p>
 
                   <div className="w-full bg-gray-300 rounded-full h-2 mb-1">

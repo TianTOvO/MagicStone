@@ -6,14 +6,15 @@
 export const STONE_NFT_ABI = [
   "constructor()",
   "event Approval(address indexed owner, address indexed spender, uint256 value)",
-  "function getStoneProps(uint256 id) view returns (uint8, uint256, uint256, bool)",
-  "function mintStone(address to, uint8 grade, uint256 damageLimit, bool mysterious) returns (uint256)",
+  "function getStoneProps(uint256 id) view returns (uint8, uint8, uint256, uint256, bool)",
+  "function mintStone(address to, uint8 grade, uint8 subGrade, uint256 damageLimit, bool mysterious) returns (uint256)",
   "function ownerOf(uint256 tokenId) view returns (address)",
   "function transferFrom(address from, address to, uint256 tokenId)",
   "function approve(address to, uint256 tokenId)",
   "function setPolishingContract(address _p)",
   "function increaseDamage(uint256 id, uint256 value)",
   "function setGrade(uint256 id, uint8 newGrade)",
+  "function setSubGrade(uint256 id, uint8 newSubGrade)",
 ];
 
 export const TOOL_NFT_ABI = [
@@ -39,7 +40,7 @@ export const GAME_TOKEN_ABI = [
 
 export const POLISHING_ABI = [
   "constructor(address _stone, address _tool)",
-  "event Polished(address indexed user, uint256 stoneId, uint256 toolId, bool upgraded, uint8 newGrade)",
+  "event Polished(address indexed user, uint256 stoneId, uint256 toolId, bool upgraded, uint8 newGrade, uint8 newSubGrade)",
   "function polish(uint256 stoneId, uint256 toolId)",
 ];
 

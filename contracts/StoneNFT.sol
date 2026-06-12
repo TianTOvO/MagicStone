@@ -6,7 +6,8 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract StoneNFT is ERC721, Ownable {
     struct Stone {
-        uint8 grade; // 0: 平凡, 1: 奇特, 2: 珍稀, 3: 璀璨
+        uint8 grade; // 0: 原石, 1: 玛瑙, 2: 翡翠, 3: 钻石
+        uint8 subGrade; // 0: none, 1-4: 子等级（仅 grade>=2 有效）
         uint256 damage;
         uint256 damageLimit;
         bool mysterious;
@@ -30,17 +31,17 @@ contract StoneNFT is ERC721, Ownable {
         polishingContract = _p;
     }
 
-    function mintStone(address to, uint8 grade, uint256 damageLimit, bool mysterious) external onlyOwner returns (uint256) {
+    function mintStone(address to, uint8 grade, uint8 subGrade, uint256 damageLimit, bool mysterious) external onlyOwner returns (uint256) {
         require(to != address(0), "Zero address");
         nextId++;
-        stones[nextId] = Stone(grade, 0, damageLimit, mysterious);
+        stones[nextId] = Stone(grade, subGrade, 0, damageLimit, mysterious);
         _safeMint(to, nextId);
         return nextId;
     }
 
-    function getStoneProps(uint256 id) external view returns (uint8, uint256, uint256, bool) {
+    function getStoneProps(uint256 id) external view returns (uint8, uint8, uint256, uint256, bool) {
         Stone storage s = stones[id];
-        return (s.grade, s.damage, s.damageLimit, s.mysterious);
+        return (s.grade, s.subGrade, s.damage, s.damageLimit, s.mysterious);
     }
 
     function increaseDamage(uint256 id, uint256 value) external onlyPolishing {
@@ -51,6 +52,10 @@ contract StoneNFT is ERC721, Ownable {
 
     function setGrade(uint256 id, uint8 newGrade) external onlyPolishing {
         stones[id].grade = newGrade;
+    }
+
+    function setSubGrade(uint256 id, uint8 newSubGrade) external onlyPolishing {
+        stones[id].subGrade = newSubGrade;
     }
 
     function burn(uint256 id) external onlyOwner {

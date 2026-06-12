@@ -1,8 +1,8 @@
 import { useContext, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { UserDataContext } from '@/contexts/userDataContext';
-import { useContracts } from '@/hooks/useContracts';
-import { STONE_GRADE_COLORS, STONE_GRADE_NAMES, TOOL_LEVEL_COLORS, TOOL_LEVEL_NAMES } from '@/types';
+import { useContracts } from '@/contexts/walletContext';
+import { STONE_GRADE_COLORS, STONE_GRADE_NAMES, TOOL_LEVEL_COLORS, TOOL_LEVEL_NAMES, getStoneDisplayName } from '@/types';
 import { motion } from 'framer-motion';
 
 export default function HomePage() {
@@ -41,7 +41,7 @@ export default function HomePage() {
             <h1 className="text-4xl font-black mb-3 bg-clip-text text-transparent bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600">
               ✨ 欢迎来到 Magic Stone
             </h1>
-            <p className="text-gray-700 text-lg font-medium">开始你的链上原石打磨之旅，收集、打磨、交易，成为传奇工匠！</p>
+            <p className="text-gray-700 text-lg font-medium">开始你的链上矿石打磨之旅，收集、打磨、交易，成为传奇工匠！</p>
           </div>
           <div className="text-right">
             {blockchainStatus === 'connected' && account ? (
@@ -74,7 +74,7 @@ export default function HomePage() {
           className={`bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-6 border-2 border-blue-300 shadow-lg ${cardHover}`}
         >
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-gray-700 text-sm font-bold">我的原石</h3>
+            <h3 className="text-gray-700 text-sm font-bold">我的矿石</h3>
             <motion.i
               className="fas fa-gem text-blue-600 text-2xl"
               animate={{ rotate: [0, 10, -10, 0] }}
@@ -155,7 +155,7 @@ export default function HomePage() {
                 transition={{ duration: 2, repeat: Infinity }}
               ></motion.i>
               <h3 className="text-2xl font-black text-gray-800 mb-2">开始打磨</h3>
-              <p className="text-gray-700 text-base font-medium">打磨你的原石，提升它们的等级和价值</p>
+              <p className="text-gray-700 text-base font-medium">打磨你的矿石，提升它们的等级和价值</p>
             </div>
             <div className="mt-4 text-blue-600 text-base font-bold flex items-center group-hover:translate-x-1.5 transition-transform duration-150">
               前往打磨站 <i className="fas fa-arrow-right ml-2"></i>
@@ -177,7 +177,7 @@ export default function HomePage() {
                 transition={{ duration: 2, repeat: Infinity }}
               ></motion.i>
               <h3 className="text-2xl font-black text-gray-800 mb-2">商城购物</h3>
-              <p className="text-gray-700 text-base font-medium">购买更多原石和工具，扩展你的收藏</p>
+              <p className="text-gray-700 text-base font-medium">购买更多矿石和工具，扩展你的收藏</p>
             </div>
             <div className="mt-4 text-purple-600 text-base font-bold flex items-center group-hover:translate-x-1.5 transition-transform duration-150">
               前往商城 <i className="fas fa-arrow-right ml-2"></i>
@@ -232,7 +232,7 @@ export default function HomePage() {
                 ></motion.div>
                 <i className="fas fa-gem text-5xl text-blue-600 relative"></i>
               </div>
-              <h4 className="text-center font-bold text-gray-800 text-sm">{STONE_GRADE_NAMES[stone.grade]}原石</h4>
+              <h4 className="text-center font-bold text-gray-800 text-sm">{getStoneDisplayName(stone.grade, stone.subGrade)}</h4>
               <p className="text-center text-gray-600 text-xs mt-2 font-semibold">{stone.damage}/{stone.damageLimit}</p>
             </motion.div>
           ))}

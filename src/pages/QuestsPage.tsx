@@ -1,16 +1,16 @@
 import { useContext, useState, useEffect } from 'react';
 import { UserDataContext } from '@/contexts/userDataContext';
-import { useContracts } from '@/hooks/useContracts';
+import { useContracts } from '@/contexts/walletContext';
 import { Quest, QUEST_TYPE_INFO } from '@/types';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 
 const mockQuests: Quest[] = [
-  { id: 1, type: '日常', title: '打磨5次原石', description: '使用打磨工具打磨任意原石5次', progress: 0, target: 5, reward: 100 },
-  { id: 2, type: '日常', title: '收集3块奇特原石', description: '通过打磨或购买获得3块奇特等级的原石', progress: 0, target: 3, reward: 200 },
-  { id: 3, type: '成就', title: '首次打磨成功', description: '成功将一块原石从平凡升级到奇特', progress: 0, target: 1, reward: 50 },
+  { id: 1, type: '日常', title: '打磨5次矿石', description: '使用打磨工具打磨任意矿石5次', progress: 0, target: 5, reward: 100 },
+  { id: 2, type: '日常', title: '收集3块玛瑙', description: '通过打磨或购买获得3块玛瑙等级的矿石', progress: 0, target: 3, reward: 200 },
+  { id: 3, type: '成就', title: '首次打磨成功', description: '成功将一块原石升级为玛瑙', progress: 0, target: 1, reward: 50 },
   { id: 4, type: '成就', title: '工具大师', description: '拥有3个专业级别的打磨工具', progress: 0, target: 3, reward: 300 },
-  { id: 5, type: '寻宝', title: '寻找神秘原石', description: '解开谜题：什么石头越打磨越亮，却不会变小？', progress: 0, target: 1, reward: 1000, isPuzzle: true },
+  { id: 5, type: '寻宝', title: '寻找神秘矿石', description: '解开谜题：什么矿石越打磨越亮，却不会变小？', progress: 0, target: 1, reward: 1000, isPuzzle: true },
   { id: 6, type: '团队', title: '极速研磨', description: '与3名队友一起，在10分钟内完成50次打磨', progress: 0, target: 1, reward: 500 },
 ];
 
@@ -126,10 +126,12 @@ export default function QuestsPage() {
       const newStone = {
         id: Date.now(),
         grade: 0,
+        subGrade: 0,
         damage: 0,
         damageLimit: 150 + Math.floor(Math.random() * 51),
         mysterious: true,
         isPolishable: true,
+        acquiredAt: Date.now(),
       };
 
       updateUserData({
@@ -140,7 +142,7 @@ export default function QuestsPage() {
         ),
       });
 
-      toast.success(`恭喜！你解开了谜题，获得了${currentPuzzle.reward}游戏币和一块神秘原石！`);
+      toast.success(`恭喜！你解开了谜题，获得了${currentPuzzle.reward}游戏币和一块神秘矿石！`);
       setShowPuzzleModal(false);
       setPuzzleAnswer('');
     } else {

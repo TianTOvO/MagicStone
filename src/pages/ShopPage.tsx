@@ -1,6 +1,6 @@
 import { useContext, useState } from 'react';
 import { UserDataContext } from '@/contexts/userDataContext';
-import { useContracts } from '@/hooks/useContracts';
+import { useContracts } from '@/contexts/walletContext';
 import { Stone, Tool, STONE_GRADE_COLORS, TOOL_LEVEL_COLORS } from '@/types';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
@@ -14,6 +14,7 @@ interface ShopItem {
   isSpecial?: boolean;
   // Stone params
   grade?: number;
+  subGrade?: number;
   mysterious?: boolean;
   damageLimitMin?: number;
   damageLimitMax?: number;
@@ -26,16 +27,16 @@ interface ShopItem {
 
 const shopItems: ShopItem[] = [
   {
-    id: 'stone-0', name: '平凡原石', description: '看起来像路边捡的，但谁知道里面有没有惊喜？',
-    price: 100, category: 'stone', grade: 0, mysterious: false, damageLimitMin: 80, damageLimitMax: 120,
+    id: 'stone-0', name: '原石', description: '未经打磨的原始矿石，一切奇迹的起点',
+    price: 100, category: 'stone', grade: 0, subGrade: 0, mysterious: false, damageLimitMin: 80, damageLimitMax: 120,
   },
   {
     id: 'tool-0', name: '普通工具', description: '能用就行',
     price: 50, category: 'tool', level: 0, durabilityMax: 100, lossCoeff: 1, durabilityConsumption: 1,
   },
   {
-    id: 'stone-mystery', name: '神秘原石', description: '蕴含神秘力量的特殊原石，有更高的升级潜力',
-    price: 500, category: 'stone', grade: 0, mysterious: true, damageLimitMin: 120, damageLimitMax: 180,
+    id: 'stone-mystery', name: '神秘原石', description: '蕴含神秘力量的特殊矿石，有更高的升级潜力',
+    price: 500, category: 'stone', grade: 0, subGrade: 0, mysterious: true, damageLimitMin: 120, damageLimitMax: 180,
     isSpecial: true,
   },
   {
@@ -43,17 +44,17 @@ const shopItems: ShopItem[] = [
     price: 300, category: 'tool', level: 1, durabilityMax: 100, lossCoeff: 0.8, durabilityConsumption: 0.8,
   },
   {
-    id: 'stone-1', name: '奇特原石', description: '一块与众不同的...石头',
-    price: 800, category: 'stone', grade: 1, mysterious: false, damageLimitMin: 150, damageLimitMax: 200,
+    id: 'stone-1', name: '玛瑙', description: '纹理温润的半宝石，打磨初见成效',
+    price: 800, category: 'stone', grade: 1, subGrade: 0, mysterious: false, damageLimitMin: 150, damageLimitMax: 200,
   },
   {
-    id: 'stone-2', name: '珍稀原石', description: '稀世珍宝~~',
-    price: 1500, category: 'stone', grade: 2, mysterious: false, damageLimitMin: 180, damageLimitMax: 250,
+    id: 'stone-2', name: '冰种翡翠', description: '透明度高如冰块，清亮水头足',
+    price: 1500, category: 'stone', grade: 2, subGrade: 2, mysterious: false, damageLimitMin: 180, damageLimitMax: 250,
     isSpecial: true,
   },
   {
-    id: 'stone-3', name: '璀璨原石', description: '光是躺在那儿，就已经在疯狂暗示它的身价了。',
-    price: 3000, category: 'stone', grade: 3, mysterious: false, damageLimitMin: 250, damageLimitMax: 350,
+    id: 'stone-3', name: '蓝钻', description: '含硼元素呈蓝色，极度稀有',
+    price: 3000, category: 'stone', grade: 3, subGrade: 2, mysterious: false, damageLimitMin: 250, damageLimitMax: 350,
     isSpecial: true,
   },
   {
@@ -128,10 +129,12 @@ export default function ShopPage() {
         newStones.push({
           id: Date.now() + i,
           grade: selectedItem.grade ?? 0,
+          subGrade: selectedItem.subGrade ?? 0,
           damage: 0,
           damageLimit,
           mysterious: selectedItem.mysterious ?? false,
           isPolishable: true,
+          acquiredAt: Date.now(),
         });
       } else {
         newTools.push({
@@ -177,7 +180,7 @@ export default function ShopPage() {
         className="bg-gradient-to-r from-pink-50 via-rose-50 to-red-50 rounded-2xl p-8 border-2 border-pink-200 shadow-xl"
       >
         <h1 className="text-4xl font-black mb-2 bg-clip-text text-transparent bg-gradient-to-r from-pink-600 via-rose-600 to-red-600">🛍️ 商城</h1>
-        <p className="text-gray-700 text-lg font-medium">购买新的原石和打磨工具</p>
+        <p className="text-gray-700 text-lg font-medium">购买新的矿石和打磨工具</p>
       </motion.div>
 
       <motion.div
@@ -261,7 +264,7 @@ export default function ShopPage() {
                       </div>
                       <div className="flex justify-between text-sm">
                         <span className="text-gray-700 font-semibold">稀有标识</span>
-                        <span className="text-gray-800 font-bold">{item.mysterious ? '神秘原石' : '普通原石'}</span>
+                        <span className="text-gray-800 font-bold">{item.mysterious ? '神秘矿石' : '常规矿石'}</span>
                       </div>
                     </>
                   ) : (

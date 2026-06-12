@@ -6,8 +6,9 @@ export interface DemoListing {
   tokenId: number;
   seller: string;
   price: number;
-  grade?: number;  // for stone
-  level?: number;  // for tool
+  grade?: number;   // for stone
+  subGrade?: number; // for stone
+  level?: number;    // for tool
 }
 
 export interface DemoOffer {
@@ -28,6 +29,7 @@ export interface DemoAuction {
   highestBid: number;
   active: boolean;
   grade?: number;
+  subGrade?: number;
   level?: number;
 }
 
@@ -75,9 +77,9 @@ export function createDemoAuctions(): DemoAuction[] {
 
 // Simulate a user's own inventory (for show in sell/auction modals)
 export const DEMO_MY_STONES = [
-  { id: 10, grade: 1, name: '奇特原石' },
-  { id: 11, grade: 0, name: '平凡原石' },
-  { id: 12, grade: 2, name: '珍稀原石' },
+  { id: 10, grade: 1, subGrade: 0, name: '玛瑙' },
+  { id: 11, grade: 0, subGrade: 0, name: '原石' },
+  { id: 12, grade: 2, subGrade: 3, name: '玻璃种翡翠' },
 ];
 
 export const DEMO_MY_TOOLS = [

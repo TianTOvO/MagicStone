@@ -1,13 +1,13 @@
 import { useContext, useState, useEffect, useCallback } from 'react';
 import { UserDataContext } from '@/contexts/userDataContext';
-import { useContracts } from '@/hooks/useContracts';
-import { STONE_GRADE_NAMES, TOOL_LEVEL_NAMES } from '@/types';
+import { useContracts } from '@/contexts/walletContext';
+import { TOOL_LEVEL_NAMES, getStoneDisplayName } from '@/types';
 import type { MarketListing, MarketOffer, AuctionInfo } from '@/types';
-import { getContractAddresses } from '@/lib/contractAddresses';
+import { getContractAddresses } from '@/contracts/contractAddresses';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 import { ethers, type EventLog } from 'ethers';
-import { createDemoListings, createDemoOffers, createDemoAuctions, DEMO_MY_STONES, DEMO_MY_TOOLS, type DemoListing, type DemoOffer, type DemoAuction } from '@/data/marketDemo';
+import { createDemoListings, createDemoOffers, createDemoAuctions, DEMO_MY_STONES, DEMO_MY_TOOLS, type DemoListing, type DemoOffer, type DemoAuction } from '@/data/demoMarket';
 
 export default function MarketPage() {
   const { userData } = useContext(UserDataContext);
@@ -558,7 +558,7 @@ export default function MarketPage() {
         className="bg-gradient-to-r from-cyan-50 via-blue-50 to-purple-50 rounded-2xl p-8 border-2 border-blue-200 shadow-xl"
       >
         <h1 className="text-4xl font-black mb-2 bg-clip-text text-transparent bg-gradient-to-r from-cyan-600 via-blue-600 to-purple-600">交易所</h1>
-        <p className="text-gray-700 text-lg font-medium">自由买卖原石和工具 · 挂单、出价、即时成交</p>
+        <p className="text-gray-700 text-lg font-medium">自由买卖矿石和工具 · 挂单、出价、即时成交</p>
         {demoMode && (
           <div className="mt-3 flex items-center gap-3">
             <span className="bg-amber-100 border border-amber-400 text-amber-800 text-xs font-bold px-3 py-1 rounded-full">
@@ -579,7 +579,7 @@ export default function MarketPage() {
           <div className="bg-gradient-to-r from-blue-100 to-purple-100 rounded-xl p-1 inline-flex border-2 border-purple-300 shadow">
             {([
               { key: 'all', label: '全部' },
-              { key: 'stones', label: '原石' },
+              { key: 'stones', label: '矿石' },
               { key: 'tools', label: '工具' },
               { key: 'myListings', label: '我的挂单' },
               { key: 'offers', label: '出价管理' },
@@ -657,7 +657,7 @@ export default function MarketPage() {
                   <div className="p-5">
                     <div className="flex justify-between items-start mb-3">
                       <h3 className="text-xl font-bold text-gray-800">
-                        {item.isStone ? '原石' : '工具'} #{item.tokenId}
+                        {item.isStone ? '矿石' : '工具'} #{item.tokenId}
                       </h3>
                       <div className="flex items-center bg-gradient-to-r from-yellow-100 to-amber-100 border-2 border-yellow-400 rounded-lg px-2 py-1 shadow">
                         <i className="fas fa-coins text-yellow-600 text-xs mr-1"></i>
@@ -740,7 +740,7 @@ export default function MarketPage() {
                       <div className="flex items-center gap-4">
                         <i className={`fas ${o.isStone ? 'fa-gem text-blue-500' : 'fa-wrench text-green-500'} text-2xl`}></i>
                         <div>
-                          <h4 className="font-bold text-gray-800">{o.isStone ? '原石' : '工具'} #{o.tokenId}</h4>
+                          <h4 className="font-bold text-gray-800">{o.isStone ? '矿石' : '工具'} #{o.tokenId}</h4>
                           <p className="text-sm text-gray-600">买家: {o.buyer.slice(0, 6)}...{o.buyer.slice(-4)}</p>
                         </div>
                       </div>
@@ -777,7 +777,7 @@ export default function MarketPage() {
                         <div className="flex items-center gap-4">
                           <i className={`fas ${o.isStone ? 'fa-gem text-blue-500' : 'fa-wrench text-green-500'} text-2xl`}></i>
                           <div>
-                            <h4 className="font-bold text-gray-800">{o.isStone ? '原石' : '工具'} #{o.tokenId}</h4>
+                            <h4 className="font-bold text-gray-800">{o.isStone ? '矿石' : '工具'} #{o.tokenId}</h4>
                             <p className="text-sm text-gray-500">等待卖家接受</p>
                           </div>
                         </div>
@@ -859,7 +859,7 @@ export default function MarketPage() {
                       </div>
                       <div className="p-4">
                         <div className="flex justify-between items-center mb-2">
-                          <h3 className="font-bold text-gray-800">{a.isStone ? '原石' : '工具'} #{a.tokenId}</h3>
+                          <h3 className="font-bold text-gray-800">{a.isStone ? '矿石' : '工具'} #{a.tokenId}</h3>
                           <span className={`text-xs font-bold px-2 py-1 rounded-full ${timeLeft < 300 ? 'bg-red-100 text-red-700 border border-red-300' : 'bg-purple-100 text-purple-700 border border-purple-300'}`}>
                             {timeLeft > 0 ? `${hours}h ${mins}m ${secs}s` : '已结束'}
                           </span>
@@ -949,7 +949,7 @@ export default function MarketPage() {
                 <i className={`fas ${selectedListing.isStone ? 'fa-gem' : 'fa-wrench'} text-3xl`}></i>
                 <div>
                   <h4 className="text-lg font-bold text-gray-800">
-                    {selectedListing.isStone ? '原石' : '工具'} #{selectedListing.tokenId}
+                    {selectedListing.isStone ? '矿石' : '工具'} #{selectedListing.tokenId}
                   </h4>
                   <p className="text-gray-600 text-sm">卖家: {selectedListing.seller.slice(0, 6)}...{selectedListing.seller.slice(-4)}</p>
                 </div>
@@ -984,12 +984,12 @@ export default function MarketPage() {
             onClick={(e) => e.stopPropagation()}
           >
             <h3 className="text-2xl font-bold text-gray-800 mb-4">上架 NFT</h3>
-            <p className="text-gray-600 mb-4 text-sm font-medium">选择你要出售的原石或工具</p>
+            <p className="text-gray-600 mb-4 text-sm font-medium">选择你要出售的矿石或工具</p>
 
             <div className="space-y-3 mb-4">
-              <h4 className="font-bold text-gray-700">你的原石:</h4>
+              <h4 className="font-bold text-gray-700">你的矿石:</h4>
               <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto">
-                {(demoMode ? demoMyStones : userData.stones).length === 0 && <span className="text-gray-400 text-sm">暂无原石</span>}
+                {(demoMode ? demoMyStones : userData.stones).length === 0 && <span className="text-gray-400 text-sm">暂无矿石</span>}
                 {(demoMode ? demoMyStones : userData.stones).map(s => (
                   <button key={s.id} onClick={() => setSellItem({ isStone: true, tokenId: s.id })}
                     className={`px-3 py-1 rounded-lg text-sm font-bold border-2 transition-all ${
@@ -997,7 +997,7 @@ export default function MarketPage() {
                         ? 'border-blue-600 bg-blue-100 text-blue-700'
                         : 'border-gray-300 hover:border-blue-400'
                     }`}
-                  >原石 #{s.id} ({STONE_GRADE_NAMES[s.grade] || '普通'})</button>
+                  >矿石 #{s.id} ({getStoneDisplayName((s as any).grade ?? 0, (s as any).subGrade ?? 0)})</button>
                 ))}
               </div>
 
@@ -1056,7 +1056,7 @@ export default function MarketPage() {
                   onChange={e => setOfferTarget({ isStone: e.target.value === 'stone', tokenId: 0 })}
                   className="w-full border-2 border-amber-300 rounded-xl px-4 py-2 text-gray-800 focus:border-amber-500 focus:outline-none"
                 >
-                  <option value="stone">原石</option>
+                  <option value="stone">矿石</option>
                   <option value="tool">工具</option>
                 </select>
               </div>
@@ -1109,7 +1109,7 @@ export default function MarketPage() {
                   onChange={e => setAuctionItem({ isStone: e.target.value === 'stone', tokenId: 0 })}
                   className="w-full border-2 border-purple-300 rounded-xl px-4 py-2 text-gray-800"
                 >
-                  <option value="stone">原石</option>
+                  <option value="stone">矿石</option>
                   <option value="tool">工具</option>
                 </select>
               </div>

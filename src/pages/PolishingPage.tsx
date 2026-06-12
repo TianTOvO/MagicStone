@@ -1,8 +1,8 @@
 import { useContext, useState } from 'react';
 import { UserDataContext } from '@/contexts/userDataContext';
-import { useContracts } from '@/hooks/useContracts';
-import { getContractAddresses } from '@/lib/contractAddresses';
-import { STONE_GRADE_COLORS, STONE_GRADE_NAMES, TOOL_LEVEL_COLORS, TOOL_LEVEL_NAMES } from '@/types';
+import { useContracts } from '@/contexts/walletContext';
+import { getContractAddresses } from '@/contracts/contractAddresses';
+import { STONE_GRADE_COLORS, TOOL_LEVEL_COLORS, TOOL_LEVEL_NAMES, getStoneDisplayName, getStoneGradeLabel } from '@/types';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 
@@ -18,7 +18,7 @@ export default function PolishingPage() {
 
   const handlePolish = async () => {
     if (!selectedStone || !selectedTool) {
-      toast.error('请选择原石和工具');
+      toast.error('请选择矿石和工具');
       return;
     }
 
@@ -38,7 +38,7 @@ export default function PolishingPage() {
       return;
     }
     if (stone.damage >= stone.damageLimit) {
-      toast.error('该原石损耗已达上限，无法继续打磨');
+      toast.error('该矿石损耗已达上限，无法继续打磨');
       return;
     }
     if (tool.durability <= 0) {
@@ -52,25 +52,71 @@ export default function PolishingPage() {
       const addresses = getContractAddresses();
       const polishingAddress = addresses.polishing;
 
-      toast.loading('正在检查授权...');
-      try {
-        if (contracts.stoneNFT) {
-          toast.loading('正在授权原石...');
-          await approveStone(polishingAddress, selectedStone);
-          toast.success('原石授权成功');
+      // Step 1: Check and handle StoneNFT approval
+      if (contracts.stoneNFT) {
+        const currentApproved = await contracts.stoneNFT.getApproved(selectedStone);
+        if (currentApproved.toLowerCase() !== polishingAddress.toLowerCase()) {
+          toast.loading('正在授权矿石...');
+          try {
+            await approveStone(polishingAddress, selectedStone);
+            toast.success('矿石授权成功');
+          } catch (approvalError) {
+            const msg = approvalError instanceof Error ? approvalError.message : '授权失败';
+            console.error('StoneNFT approval failed:', msg);
+            toast.error(`矿石授权失败: ${msg}`);
+            setIsPolishing(false);
+            return;
+          }
         }
-        if (contracts.toolNFT) {
+      }
+
+      // Step 2: Check and handle ToolNFT approval
+      if (contracts.toolNFT) {
+        const currentApproved = await contracts.toolNFT.getApproved(selectedTool);
+        if (currentApproved.toLowerCase() !== polishingAddress.toLowerCase()) {
           toast.loading('正在授权工具...');
-          await approveTool(polishingAddress, selectedTool);
-          toast.success('工具授权成功');
+          try {
+            await approveTool(polishingAddress, selectedTool);
+            toast.success('工具授权成功');
+          } catch (approvalError) {
+            const msg = approvalError instanceof Error ? approvalError.message : '授权失败';
+            console.error('ToolNFT approval failed:', msg);
+            toast.error(`工具授权失败: ${msg}`);
+            setIsPolishing(false);
+            return;
+          }
         }
-      } catch {
-        console.warn('Approval may have failed or already granted');
       }
 
       toast.loading('正在执行打磨...');
-      await polish(selectedStone, selectedTool);
-      toast.success('打磨成功！原石已更新。');
+      const receipt = await polish(selectedStone, selectedTool);
+      // Parse Polished event to get upgrade result
+      if (receipt?.logs?.length > 0) {
+        try {
+          const iface = contracts.polishing;
+          if (iface) {
+            for (const log of receipt.logs) {
+              const parsed = iface.interface.parseLog({ topics: [...log.topics], data: log.data });
+              if (parsed?.name === 'Polished') {
+                const { upgraded, newGrade, newSubGrade } = parsed.args;
+                if (upgraded) {
+                  const displayName = getStoneDisplayName(newGrade, newSubGrade);
+                  toast.success(`打磨成功！矿石升级为 ${displayName} (${getStoneGradeLabel(newGrade, newSubGrade)})`);
+                } else {
+                  toast.success('打磨完成，本次未触发升级');
+                }
+                break;
+              }
+            }
+          } else {
+            toast.success('打磨成功！矿石已更新。');
+          }
+        } catch {
+          toast.success('打磨成功！矿石已更新。');
+        }
+      } else {
+        toast.success('打磨成功！矿石已更新。');
+      }
 
       setTimeout(() => {
         setSelectedStone(null);
@@ -103,7 +149,7 @@ export default function PolishingPage() {
         className="bg-gradient-to-r from-amber-50 via-orange-50 to-red-50 rounded-2xl p-8 border-2 border-orange-200 shadow-xl"
       >
         <h1 className="text-4xl font-black mb-2 bg-clip-text text-transparent bg-gradient-to-r from-amber-600 via-orange-600 to-red-600">✨ 打磨站</h1>
-        <p className="text-gray-700 text-lg font-medium">选择你的原石和工具，开始打磨之旅</p>
+        <p className="text-gray-700 text-lg font-medium">选择你的矿石和工具，开始打磨之旅</p>
       </motion.div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -115,7 +161,7 @@ export default function PolishingPage() {
           className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-6 border-2 border-blue-300 shadow-lg"
         >
           <h2 className="text-xl font-bold mb-4 flex items-center text-gray-800">
-            <i className="fas fa-gem text-blue-600 mr-2"></i> 选择原石
+            <i className="fas fa-gem text-blue-600 mr-2"></i> 选择矿石
           </h2>
 
           {polishableStones.length > 0 ? (
@@ -136,7 +182,7 @@ export default function PolishingPage() {
                     <i className={`fas fa-gem text-5xl ${selectedStone === stone.id ? 'text-white' : 'text-blue-600'} relative`}></i>
                   </div>
                   <h4 className={`text-center font-bold text-sm ${selectedStone === stone.id ? 'text-white' : 'text-gray-800'}`}>
-                    {STONE_GRADE_NAMES[stone.grade]}原石
+                    {getStoneDisplayName(stone.grade, stone.subGrade)}
                   </h4>
                   <p className={`text-center text-xs mt-1 ${selectedStone === stone.id ? 'text-blue-50' : 'text-gray-700'}`}>
                     {stone.damage}/{stone.damageLimit} 损耗
@@ -147,8 +193,8 @@ export default function PolishingPage() {
           ) : (
             <div className="flex flex-col items-center justify-center p-8 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg border border-blue-300">
               <i className="fas fa-gem text-4xl text-blue-500 mb-3"></i>
-              <p className="text-gray-800 text-center font-semibold">没有可打磨的原石</p>
-              <p className="text-gray-700 text-sm text-center mt-2">去商城购买更多原石吧！</p>
+              <p className="text-gray-800 text-center font-semibold">没有可打磨的矿石</p>
+              <p className="text-gray-700 text-sm text-center mt-2">去商城购买更多矿石吧！</p>
             </div>
           )}
         </motion.div>
@@ -167,7 +213,7 @@ export default function PolishingPage() {
           <div className="space-y-6">
             <div className="grid grid-cols-2 gap-4">
               <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-4 text-center border border-blue-300">
-                <p className="text-sm text-gray-700 font-semibold mb-2">选定的原石</p>
+                <p className="text-sm text-gray-700 font-semibold mb-2">选定的矿石</p>
                 {selectedStone ? (
                   <>
                     <div className="h-16 flex items-center justify-center relative">
@@ -182,7 +228,7 @@ export default function PolishingPage() {
                       })()}
                     </div>
                     <p className="text-sm font-medium mt-2">
-                      {(() => { const s = userData.stones.find(st => st.id === selectedStone); return s ? STONE_GRADE_NAMES[s.grade] + '原石' : ''; })()}
+                      {(() => { const s = userData.stones.find(st => st.id === selectedStone); return s ? getStoneDisplayName(s.grade, s.subGrade) : ''; })()}
                     </p>
                   </>
                 ) : (
@@ -284,7 +330,7 @@ export default function PolishingPage() {
             <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg p-4 text-sm border-2 border-purple-300">
               <h3 className="font-bold text-purple-700 mb-2">打磨说明</h3>
               <ul className="space-y-1 list-disc list-inside text-gray-700">
-                <li>每次打磨都会增加原石损耗</li>
+                <li>每次打磨都会增加矿石损耗</li>
                 <li>等级越高，升级概率越低</li>
                 <li>高级工具减少损耗和耐久消耗</li>
                 <li>损耗值达到上限后无法继续打磨</li>
